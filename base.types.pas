@@ -4,12 +4,31 @@ interface
 
   uses System.Math;
 
+(*
+
+Базовый набор функций линейной алгербы над 3D и 4D векторами
+
+функции в интерфейсной части реализованы на Pascal
+ассемблерные функции реализованы как статические классовые методы
+класса T_SSE.
+
+pascal-варианты преимущественно реализованы с директивами inline, register
+это существенно повышает производительность итогового кода.
+
+assembler-варианты не поддерживают inline, поэтому для них желательно
+реализовывать функции, обрабатывающие большое количество элементов сразу,
+кроме того, это экономит операции на PUSH/POP используемых регистров.
+
+
+Черепанов Р.О.     08 March 2021
+RCherepanov82@gmail.com
+Tiriet@habr.com
+
+*)
+
 type
 
-
   T_RealArr = packed array of real;
-
-
 
   T_Vect = packed record
     x: double;
@@ -79,72 +98,71 @@ type
 
 
   T_SSE = class(TObject)
-  private
   public
-    class procedure Add(var a_i: T_Vect; const b_ij: T_Tens; const C_j: T_Vect;
-        const N: integer); overload; static; register;
-    class procedure Add(var a_i: T_Vect; const b_ij: T_Tens; const C_j: T_Vect);
-        overload; static; register;
-    class procedure Add(var a_j: T_Vect; const C_i: T_Vect; const b_ij: T_Tens);
-        overload; static; register;
-    class procedure Add(var a_j: T_Vect; const C_i: T_VectArr; const b_ij:
-        T_TensorArr; const N: integer); overload; static; register;
-    class procedure Add(var a: T_Vect; const C: real; const b: T_Vect; const d:
-        real); overload; static; register;
-    class procedure Add(var a_i: T_Vect; const b_ij: T_Tens; const C_j:
-        T_Vect4); overload; static; register;
-    class procedure Add(var a: T_Vect; const b: T_Vect); overload; static;
-        register;
-    class procedure Add(var a: T_Vect; const b: T_Vect; const C: real); overload;
+    class procedure Add(var a_ij: T_M4; const b_ij: T_M4; const c: real); overload;
         static; register;
-    class procedure Add(var a_i: T_Vect; const C_j: T_Vect; const b_ij: T_Tens;
-        const K: real); overload; static; register;
-    class procedure Add(var a: T_Vect; const b : T_Vect; const c, V: real);
-        overload; static; register;
-    class procedure Add(var a: T_Vect; const C: real; const b: T_Vect); overload;
+    class procedure Add(var a_ij: T_M4; const DC_i, DC_j: T_Vect4); overload;
         static; register;
-    class procedure Add(var a_ij: T_M4; const b_ij:
-        T_M4; const c: real);         overload;  static;register;
-    class procedure Add(var a_ij: T_M4; const DC_i, DC_j:
-        T_Vect4);         overload;  static;register;
-    class procedure Add(var DC_i: T_Vect4; const a_ij: T_M4;
-        const DC_j: T_Vect4); overload; static; register;
-    class procedure Add(var a: T_Vect4; const b: T_Vect4); overload;
-        static; register;
-    class procedure Add(var a: T_Vect4; const b: T_Vect4; const koeff:
-        real); overload; static; register;
-    class procedure Add(var a: T_Vect4; const b: T_Vect; const koeff: real);
-        overload; static; register;
-    class procedure Add(var a: T_Tens; const b: T_Tens); overload; static; register;
-    class procedure Add(var a: T_Tens; const b: T_Tens; const koeff: real); overload;
-        static; register;
-    class procedure Invert(var S: T_Tens); overload; static;
     class procedure Add(var a: T_Tens; const b: real); overload; static; register;
+    class procedure Add(var a: T_Tens; const b: T_Tens); overload; static; register;
+    class procedure Add(var a: T_Tens; const b: T_Tens; const koeff: real);
+        overload; static; register;
     class procedure Add(var B_ab: T_Tens; const _DR_alfa, _DR_beta: T_Vect);
         overload; static; register;
     class procedure Add(var B_ab: T_Tens; const _DR_alfa, _DR_beta: T_Vect; const
         alfa: real); overload; static; register;
+    class procedure Add(var a: T_Vect; const C: real; const b: T_Vect); overload;
+        static; register;
+    class procedure Add(var a: T_Vect; const C: real; const b: T_Vect; const d:
+        real); overload; static; register;
+    class procedure Add(var a_i: T_Vect; const b_ij: T_Tens; const C_j: T_Vect);
+        overload; static; register;
+    class procedure Add(var a_i: T_Vect; const b_ij: T_Tens; const C_j: T_Vect;
+        const N: integer); overload; static; register;
+    class procedure Add(var a_i: T_Vect; const b_ij: T_Tens; const C_j: T_Vect4);
+        overload; static; register;
+    class procedure Add(var a: T_Vect; const b: T_Vect); overload; static; register;
+    class procedure Add(var a: T_Vect; const b: T_Vect; const C: real); overload;
+        static; register;
+    class procedure Add(var a: T_Vect; const b : T_Vect; const c, V: real);
+        overload; static; register;
+    class procedure Add(var a_j: T_Vect; const C_i: T_Vect; const b_ij: T_Tens);
+        overload; static; register;
+    class procedure Add(var a_i: T_Vect; const C_j: T_Vect; const b_ij: T_Tens;
+        const K: real); overload; static; register;
+    class procedure Add(var a_j: T_Vect; const C_i: T_VectArr; const b_ij:
+        T_TensorArr; const N: integer); overload; static; register;
+    class procedure Add(var DC_i: T_Vect4; const a_ij: T_M4; const DC_j: T_Vect4);
+        overload; static; register;
+    class procedure Add(var a: T_Vect4; const b: T_Vect; const koeff: real);
+        overload; static; register;
+    class procedure Add(var a: T_Vect4; const b: T_Vect4); overload; static;
+        register;
+    class procedure Add(var a: T_Vect4; const b: T_Vect4; const koeff: real);
+        overload; static; register;
     class procedure Add(const a_j: T_VectArr; const C_i: T_VectArr; const b_ij:
         T_TensorArr; const N: integer); overload; static; register;
-    class procedure Invert(const S: T_Tens; const i0, i1: integer);
-                overload;  static;register;
-    class procedure Invert_gauss(var S: T_M4); overload; static; register;
-    class procedure Invert_gauss(var S: T_Tens);         overload;  static;register;
-    class procedure Invert_gauss(var S: T_M4; const N: integer); overload; static;
-        register;
-    class function Invert_M3_clang(const M3: T_Tens3): T_Tens3; static; cdecl;
-    class procedure Solve(const A: T_Tens; const B: T_Vect; var X: T_Vect);
-        overload; static; register;
-    class procedure Solve(const A: P_Tens; const B: P_Vect; const X: P_Vect; const
-        N: integer); overload; static; register;
-    class procedure Solve_old(const A: T_Tens; const B: T_Vect; var X: T_Vect);
-        overload; static; register;
     class function DotProd(const V0,V1 : T_Vect): real; overload; static;
-    class procedure DotProd(const V0,V1 : T_Vect; var Res: double); overload; static;
-    class procedure DotProd(const V0,V1 : T_VectArr;const Res: T_RealArr; const i0,i1:
-        integer); overload; static;
+    class procedure DotProd(const V0,V1 : T_Vect; var Res: double); overload;
+        static;
     class procedure DotProd(const V0,V1 : T_VectArr; var Res: real; const i0,i1:
         integer); overload; static;
+    class procedure DotProd(const V0,V1 : T_VectArr;const Res: T_RealArr; const i0,
+        i1: integer); overload; static;
+    class procedure Invert(var S: T_Tens); overload; static;
+    class procedure Invert(const S: T_Tens; const i0, i1: integer); overload;
+        static; register;
+    class procedure Invert_gauss(var S: T_M4); overload; static; register;
+    class procedure Invert_gauss(var S: T_M4; const N: integer); overload; static;
+        register;
+    class procedure Invert_gauss(var S: T_Tens); overload; static; register;
+    class function Invert_M3_clang(const M3: T_Tens3): T_Tens3; static; cdecl;
+    class procedure Solve(const A: P_Tens; const B: P_Vect; const X: P_Vect; const
+        N: integer); overload; static; register;
+    class procedure Solve(const A: T_Tens; const B: T_Vect; var X: T_Vect);
+        overload; static; register;
+    class procedure Solve_old(const A: T_Tens; const B: T_Vect; var X: T_Vect);
+        overload; static; register;
   end;
 
 
@@ -2252,6 +2270,475 @@ begin
   Result := mult(A, B);
 end;
 
+class procedure T_SSE.Add(var a_ij: T_M4; const b_ij:
+    T_M4; const c: real);
+{$IFDEF CPUX64}
+asm
+// TEST COVERED
+  .NOFRAME
+
+
+  movapd  XMM4, c  // calling convention set as "Register", "C" stored in XMM2 as VALUE!!!
+                   // "c" is not Pointer!!!!
+  movlhps XMM4, XMM4
+
+
+  movapd XMM0, oWORD[b_ij + 0*FloatSize ]
+  movapd XMM1, oWORD[b_ij + 2*FloatSize ]
+  movapd XMM2, oWORD[b_ij + 4*FloatSize ]
+  movapd XMM3, oWORD[b_ij + 6*FloatSize ]
+
+  mulpd  XMM0, XMM4
+  mulpd  XMM1, XMM4
+  mulpd  XMM2, XMM4
+  mulpd  XMM3, XMM4
+
+  addpd  XMM0, oWORD[a_ij + 0*FloatSize ]
+  addpd  XMM1, oWORD[a_ij + 2*FloatSize ]
+  addpd  XMM2, oWORD[a_ij + 4*FloatSize ]
+  addpd  XMM3, oWORD[a_ij + 6*FloatSize ]
+
+  movapd oWORD[a_ij + 0*FloatSize ], XMM0
+  movapd oWORD[a_ij + 2*FloatSize ], XMM1
+  movapd oWORD[a_ij + 4*FloatSize ], XMM2
+  movapd oWORD[a_ij + 6*FloatSize ], XMM3
+
+  movapd XMM0, oWORD[b_ij +  8*FloatSize ]
+  movapd XMM1, oWORD[b_ij + 10*FloatSize ]
+  movapd XMM2, oWORD[b_ij + 12*FloatSize ]
+  movapd XMM3, oWORD[b_ij + 14*FloatSize ]
+
+  mulpd  XMM0, XMM4
+  mulpd  XMM1, XMM4
+  mulpd  XMM2, XMM4
+  mulpd  XMM3, XMM4
+
+  addpd  XMM0, oWORD[a_ij + 8*FloatSize ]
+  addpd  XMM1, oWORD[a_ij + 10*FloatSize ]
+  addpd  XMM2, oWORD[a_ij + 12*FloatSize ]
+  addpd  XMM3, oWORD[a_ij + 14*FloatSize ]
+
+  movapd oWORD[a_ij +  8*FloatSize ], XMM0
+  movapd oWORD[a_ij + 10*FloatSize ], XMM1
+  movapd oWORD[a_ij + 12*FloatSize ], XMM2
+  movapd oWORD[a_ij + 14*FloatSize ], XMM3
+
+{$ELSE} {X32 MODE}  begin
+  a_ij[ 0, 0] := a_ij[ 0, 0] + b_ij[ 0, 0] *c;
+  a_ij[ 0, 1] := a_ij[ 0, 1] + b_ij[ 0, 1] *c;
+  a_ij[ 0, 2] := a_ij[ 0, 2] + b_ij[ 0, 2] *c;
+  a_ij[ 0, 3] := a_ij[ 0, 3] + b_ij[ 0, 3] *c;
+
+  a_ij[ 1, 0] := a_ij[ 1, 0] + b_ij[ 1, 0] *c;
+  a_ij[ 1, 1] := a_ij[ 1, 1] + b_ij[ 1, 1] *c;
+  a_ij[ 1, 2] := a_ij[ 1, 2] + b_ij[ 1, 2] *c;
+  a_ij[ 1, 3] := a_ij[ 1, 3] + b_ij[ 1, 3] *c;
+
+  a_ij[ 2, 0] := a_ij[ 2, 0] + b_ij[ 2, 0] *c;
+  a_ij[ 2, 1] := a_ij[ 2, 1] + b_ij[ 2, 1] *c;
+  a_ij[ 2, 2] := a_ij[ 2, 2] + b_ij[ 2, 2] *c;
+  a_ij[ 2, 3] := a_ij[ 2, 3] + b_ij[ 2, 3] *c;
+
+  a_ij[ 3, 0] := a_ij[ 3, 0] + b_ij[ 3, 0] *c;
+  a_ij[ 3, 1] := a_ij[ 3, 1] + b_ij[ 3, 1] *c;
+  a_ij[ 3, 2] := a_ij[ 3, 2] + b_ij[ 3, 2] *c;
+  a_ij[ 3, 3] := a_ij[ 3, 3] + b_ij[ 3, 3] *c;
+{$ENDIF}
+end;
+
+
+class procedure T_SSE.Add(var a_ij: T_M4; const DC_i, DC_j:
+    T_Vect4);
+{$IFDEF CPUX64}
+asm
+// TEST COVERED
+  .NOFRAME
+  .SAVENV XMM4
+  .SAVENV XMM5
+
+
+  movapd XMM0, oWORD[ DC_i + 0*FloatSize ]
+  movapd XMM1, oWORD[ DC_i + 2*FloatSize ]
+
+  movapd XMM2, oWORD[ DC_j + 0*FloatSize ]
+  movapd XMM3, oWORD[ DC_j + 2*FloatSize ]
+
+  ///// a_ij[-1]
+  movapd  XMM4, XMM0
+  movlhps XMM4, XMM4 // XMM4 = DC_i[-1] |  DC_i[-1]
+
+  movapd  XMM5, XMM4 // XMM5 = DC_i[-1] |  DC_i[-1]
+
+  mulpd   XMM4, XMM2 // XMM4 = DC_i[-1] * (DC_j[-1] | DC_j[ 0])
+  mulpd   XMM5, XMM3 // XMM5 = DC_i[-1] * (DC_j[ 1] | DC_j[ 2])
+
+  addpd XMM4, oWORD[a_ij +  0*FloatSize ]
+  addpd XMM5, oWORD[a_ij +  2*FloatSize ]
+
+  movapd oWORD[a_ij +  0*FloatSize ], XMM4
+  movapd oWORD[a_ij +  2*FloatSize ], XMM5
+
+  ///// Next stringL a_ij[0]
+  ADD a_ij, 4*FloatSize
+
+  movapd  XMM4, XMM0
+  movhlps XMM4, XMM4 // XMM4 = DC_i[ 0] |  DC_i[ 0]
+
+  movapd  XMM5, XMM4 // XMM5 = DC_i[ 0] |  DC_i[ 0]
+  mulpd   XMM4, XMM2 // XMM4 = DC_i[ 0] * (DC_j[-1] | DC_j[ 0])
+  mulpd   XMM5, XMM3 // XMM5 = DC_i[ 0] * (DC_j[ 1] | DC_j[ 2])
+
+  addpd XMM4, oWORD[a_ij +  0*FloatSize ]
+  addpd XMM5, oWORD[a_ij +  2*FloatSize ]
+
+  movapd oWORD[a_ij +  0*FloatSize ], XMM4
+  movapd oWORD[a_ij +  2*FloatSize ], XMM5
+
+  ///// Next string  a_ij[1]
+  ADD a_ij, 4*FloatSize
+
+  movapd  XMM4, XMM1
+  movlhps XMM4, XMM4 // XMM4 = DC_i[ 1] |  DC_i[ 1]
+
+  movapd  XMM5, XMM4 // XMM5 = DC_i[ 1] |  DC_i[ 1]
+  mulpd   XMM4, XMM2 // XMM4 = DC_i[ 1] * (DC_j[-1] | DC_j[ 0])
+  mulpd   XMM5, XMM3 // XMM5 = DC_i[ 1] * (DC_j[ 1] | DC_j[ 2])
+
+  addpd XMM4, oWORD[a_ij +  0*FloatSize ]
+  addpd XMM5, oWORD[a_ij +  2*FloatSize ]
+
+  movapd oWORD[a_ij +  0*FloatSize ], XMM4
+  movapd oWORD[a_ij +  2*FloatSize ], XMM5
+
+  ///// Next string   a_ij[2]
+  ADD a_ij, 4*FloatSize
+
+  movapd  XMM4, XMM1
+  movhlps XMM4, XMM4 // XMM4 = DC_i[ 2] |  DC_i[ 2]
+
+  movapd  XMM5, XMM4 // XMM5 = DC_i[ 2] |  DC_i[ 2]
+  mulpd   XMM4, XMM2 // XMM4 = DC_i[ 2] * (DC_j[-1] | DC_j[ 0])
+  mulpd   XMM5, XMM3 // XMM5 = DC_i[ 2] * (DC_j[ 1] | DC_j[ 2])
+
+  addpd XMM4, oWORD[a_ij +  0*FloatSize ]
+  addpd XMM5, oWORD[a_ij +  2*FloatSize ]
+
+  movapd oWORD[a_ij +  0*FloatSize ], XMM4
+  movapd oWORD[a_ij +  2*FloatSize ], XMM5
+
+
+{$ELSE} {X32 MODE}begin
+  a_ij[ 0, 0] := a_ij[ 0, 0] + DC_j[ 0]*DC_i[ 0];
+  a_ij[ 0, 1] := a_ij[ 0, 1] + DC_j[ 1]*DC_i[ 0];
+  a_ij[ 0, 2] := a_ij[ 0, 2] + DC_j[ 2]*DC_i[ 0];
+  a_ij[ 0, 3] := a_ij[ 0, 3] + DC_j[ 3]*DC_i[ 0];
+
+  a_ij[ 1, 0] := a_ij[ 1, 0] + DC_j[ 0]*DC_i[ 1];
+  a_ij[ 1, 1] := a_ij[ 1, 1] + DC_j[ 1]*DC_i[ 1];
+  a_ij[ 1, 2] := a_ij[ 1, 2] + DC_j[ 2]*DC_i[ 1];
+  a_ij[ 1, 3] := a_ij[ 1, 3] + DC_j[ 3]*DC_i[ 1];
+
+  a_ij[ 2, 0] := a_ij[ 2, 0] + DC_j[ 0]*DC_i[ 2];
+  a_ij[ 2, 1] := a_ij[ 2, 1] + DC_j[ 1]*DC_i[ 2];
+  a_ij[ 2, 2] := a_ij[ 2, 2] + DC_j[ 2]*DC_i[ 2];
+  a_ij[ 2, 3] := a_ij[ 2, 3] + DC_j[ 3]*DC_i[ 2];
+
+  a_ij[ 3, 0] := a_ij[ 3, 0] + DC_j[ 0]*DC_i[ 3];
+  a_ij[ 3, 1] := a_ij[ 3, 1] + DC_j[ 1]*DC_i[ 3];
+  a_ij[ 3, 2] := a_ij[ 3, 2] + DC_j[ 2]*DC_i[ 3];
+  a_ij[ 3, 3] := a_ij[ 3, 3] + DC_j[ 3]*DC_i[ 3];
+{$ENDIF}
+end;
+
+
+class procedure T_SSE.Add(var a: T_Tens; const b: real);
+begin
+  a.x.x := a.x.x + b;
+  a.y.y := a.y.y + b;
+  a.z.z := a.z.z + b;
+end;
+
+class procedure T_SSE.Add(var a: T_Tens; const b: T_Tens);
+begin
+  a.x.x := a.x.x + b.x.x;
+  a.y.x := a.y.x + b.y.x;
+  a.z.x := a.z.x + b.z.x;
+
+  a.x.y := a.x.y + b.x.y;
+  a.y.y := a.y.y + b.y.y;
+  a.z.y := a.z.y + b.z.y;
+
+  a.x.z := a.x.z + b.x.z;
+  a.y.z := a.y.z + b.y.z;
+  a.z.z := a.z.z + b.z.z;
+end;
+
+class procedure T_SSE.Add(var a: T_Tens; const b: T_Tens; const koeff: real);
+begin
+  a.x.x := a.x.x + b.x.x*koeff;
+  a.x.y := a.x.y + b.x.y*koeff;
+  a.x.z := a.x.z + b.x.z*koeff;
+
+  a.y.x := a.y.x + b.y.x*koeff;
+  a.y.y := a.y.y + b.y.y*koeff;
+  a.y.z := a.y.z + b.y.z*koeff;
+
+  a.z.x := a.z.x + b.z.x*koeff;
+  a.z.y := a.z.y + b.z.y*koeff;
+  a.z.z := a.z.z + b.z.z*koeff;
+end;
+
+class procedure T_SSE.Add(var B_ab: T_Tens; const _DR_alfa, _DR_beta: T_Vect);
+{$IFDEF CPUX64}
+asm
+// TEST COVERED
+  .NOFRAME
+  .SAVENV XMM4
+  .SAVENV XMM5
+  .SAVENV XMM6
+
+  movapd XMM0, oWORD[ _DR_alfa + 0*FloatSize ]
+  movapd XMM1, oWORD[ _DR_alfa + 2*FloatSize ]
+
+  movapd XMM2, oWORD[ _DR_beta + 0*FloatSize ]
+  movapd XMM3, oWORD[ _DR_beta + 2*FloatSize ]
+
+  ///// a_ij[-1]
+  movapd  XMM4, XMM0
+  movlhps XMM4, XMM4 // XMM4 = _DR_alfa[-1] |  _DR_alfa[-1]
+
+  movapd  XMM5, XMM4 // XMM5 = _DR_alfa[-1] |  _DR_alfa[-1]
+
+  mulpd   XMM4, XMM2 // XMM4 = _DR_alfa[-1] * (DC_j[-1] | DC_j[ 0])
+  mulpd   XMM5, XMM3 // XMM5 = _DR_alfa[-1] * (DC_j[ 1] | DC_j[ 2])
+
+  addpd XMM4, oWORD[B_ab +  0*FloatSize ]
+  addpd XMM5, oWORD[B_ab +  2*FloatSize ]
+
+  movapd oWORD[B_ab +  0*FloatSize ], XMM4
+  movlpd qWORD[B_ab +  2*FloatSize ], XMM5
+
+  ///// Next stringL a_ij[0]
+  ADD B_ab, 4*FloatSize
+
+  movapd  XMM4, XMM0
+  movhlps XMM4, XMM4 // XMM4 = _DR_alfa[ 0] |  _DR_alfa[ 0]
+
+  movapd  XMM5, XMM4 // XMM5 = _DR_alfa[ 0] |  _DR_alfa[ 0]
+  mulpd   XMM4, XMM2 // XMM4 = _DR_alfa[ 0] * (DC_j[-1] | DC_j[ 0])
+  mulpd   XMM5, XMM3 // XMM5 = _DR_alfa[ 0] * (DC_j[ 1] | DC_j[ 2])
+
+  addpd XMM4, oWORD[B_ab +  0*FloatSize ]
+  addpd XMM5, oWORD[B_ab +  2*FloatSize ]
+
+  movapd oWORD[B_ab +  0*FloatSize ], XMM4
+  movlpd qWORD[B_ab +  2*FloatSize ], XMM5
+
+  ///// Next string  a_ij[1]
+  ADD B_ab, 4*FloatSize
+
+  movapd  XMM4, XMM1
+  movlhps XMM4, XMM4 // XMM4 = _DR_alfa[ 1] |  _DR_alfa[ 1]
+
+  movapd  XMM5, XMM4 // XMM5 = _DR_alfa[ 1] |  DC_i[ 1]
+  mulpd   XMM4, XMM2 // XMM4 = _DR_alfa[ 1] * (DC_j[-1] | DC_j[ 0])
+  mulpd   XMM5, XMM3 // XMM5 = _DR_alfa[ 1] * (DC_j[ 1] | DC_j[ 2])
+
+  addpd XMM4, oWORD[B_ab +  0*FloatSize ]
+  addpd XMM5, oWORD[B_ab +  2*FloatSize ]
+
+  movapd oWORD[B_ab +  0*FloatSize ], XMM4
+  movlpd qWORD[B_ab +  2*FloatSize ], XMM5
+
+
+{$ELSE} {X32 MODE}begin
+    // B[alfa, beta ] = _DR[alfa]*DC_beta,  dR[-1] = 1.0;
+
+    B_ab.x.x := B_ab.x.x + _DR_alfa.x * _DR_beta.x;
+    B_ab.x.y := B_ab.x.y + _DR_alfa.x * _DR_beta.y;
+    B_ab.x.z := B_ab.x.z + _DR_alfa.x * _DR_beta.z;
+
+
+    B_ab.y.x := B_ab.y.x + _DR_alfa.y * _DR_beta.x;
+    B_ab.y.y := B_ab.y.y + _DR_alfa.y * _DR_beta.y;
+    B_ab.y.z := B_ab.y.z + _DR_alfa.y * _DR_beta.z;
+
+
+    B_ab.z.x := B_ab.z.x + _DR_alfa.z * _DR_beta.x;
+    B_ab.z.y := B_ab.z.y + _DR_alfa.z * _DR_beta.y;
+    B_ab.z.z := B_ab.z.z + _DR_alfa.z * _DR_beta.z;
+{$ENDIF}
+end;
+
+
+class procedure T_SSE.Add(var B_ab: T_Tens; const _DR_alfa, _DR_beta: T_Vect;
+    const alfa: real);
+{$IFDEF CPUX64}
+asm
+// TEST COVERED
+
+  .NOFRAME
+  .SAVENV XMM4
+  .SAVENV XMM5
+  .SAVENV XMM6
+
+//  movlpd  XMM4, qWORD[alfa]
+  movapd  XMM4, alfa // Alfa stored in XMM3! becouse of "register" calling convention
+  movlhps XMM4, XMM4
+  movapd XMM0, oWORD[ _DR_alfa + 0*FloatSize ]
+  movapd XMM1, oWORD[ _DR_alfa + 2*FloatSize ]
+
+  mulpd XMM0, XMM4 //  _DR_alfa* Coeff
+  mulsd XMM1, XMM4 //
+
+  movapd XMM2, oWORD[ _DR_beta + 0*FloatSize ]
+  movapd XMM3, oWORD[ _DR_beta + 2*FloatSize ]
+
+  ///// a_ij[-1]
+  movapd  XMM4, XMM0
+  movlhps XMM4, XMM4 // XMM4 = _DR_alfa[-1] |  _DR_alfa[-1]
+
+  movapd  XMM5, XMM4 // XMM5 = _DR_alfa[-1] |  _DR_alfa[-1]
+
+  mulpd   XMM4, XMM2 // XMM4 = _DR_alfa[-1] * (DC_j[-1] | DC_j[ 0])
+  mulpd   XMM5, XMM3 // XMM5 = _DR_alfa[-1] * (DC_j[ 1] | DC_j[ 2])
+
+  addpd XMM4, oWORD[B_ab +  0*FloatSize ]
+  addpd XMM5, oWORD[B_ab +  2*FloatSize ]
+
+  movapd oWORD[B_ab +  0*FloatSize ], XMM4
+  movlpd qWORD[B_ab +  2*FloatSize ], XMM5
+
+  ///// Next stringL a_ij[0]
+  ADD B_ab, 4*FloatSize
+
+  movapd  XMM4, XMM0
+  movhlps XMM4, XMM4 // XMM4 = _DR_alfa[ 0] |  _DR_alfa[ 0]
+
+  movapd  XMM5, XMM4 // XMM5 = _DR_alfa[ 0] |  _DR_alfa[ 0]
+  mulpd   XMM4, XMM2 // XMM4 = _DR_alfa[ 0] * (DC_j[-1] | DC_j[ 0])
+  mulpd   XMM5, XMM3 // XMM5 = _DR_alfa[ 0] * (DC_j[ 1] | DC_j[ 2])
+
+  addpd XMM4, oWORD[B_ab +  0*FloatSize ]
+  addpd XMM5, oWORD[B_ab +  2*FloatSize ]
+
+  movapd oWORD[B_ab +  0*FloatSize ], XMM4
+  movlpd qWORD[B_ab +  2*FloatSize ], XMM5
+
+  ///// Next string  a_ij[1]
+  ADD B_ab, 4*FloatSize
+
+  movapd  XMM4, XMM1
+  movlhps XMM4, XMM4 // XMM4 = _DR_alfa[ 1] |  _DR_alfa[ 1]
+
+  movapd  XMM5, XMM4 // XMM5 = _DR_alfa[ 1] |  DC_i[ 1]
+  mulpd   XMM4, XMM2 // XMM4 = _DR_alfa[ 1] * (DC_j[-1] | DC_j[ 0])
+  mulpd   XMM5, XMM3 // XMM5 = _DR_alfa[ 1] * (DC_j[ 1] | DC_j[ 2])
+
+  addpd XMM4, oWORD[B_ab +  0*FloatSize ]
+  addpd XMM5, oWORD[B_ab +  2*FloatSize ]
+
+  movapd oWORD[B_ab +  0*FloatSize ], XMM4
+  movlpd qWORD[B_ab +  2*FloatSize ], XMM5
+
+
+{$ELSE} {X32 MODE}begin
+    // B[alfa, beta ] = _DR[alfa]*DC_beta,  dR[-1] = 1.0;
+
+    B_ab.x.x := B_ab.x.x + _DR_alfa.x * _DR_beta.x*alfa;
+    B_ab.x.y := B_ab.x.y + _DR_alfa.x * _DR_beta.y*alfa;
+    B_ab.x.z := B_ab.x.z + _DR_alfa.x * _DR_beta.z*alfa;
+
+
+    B_ab.y.x := B_ab.y.x + _DR_alfa.y * _DR_beta.x*alfa;
+    B_ab.y.y := B_ab.y.y + _DR_alfa.y * _DR_beta.y*alfa;
+    B_ab.y.z := B_ab.y.z + _DR_alfa.y * _DR_beta.z*alfa;
+
+
+    B_ab.z.x := B_ab.z.x + _DR_alfa.z * _DR_beta.x*alfa;
+    B_ab.z.y := B_ab.z.y + _DR_alfa.z * _DR_beta.y*alfa;
+    B_ab.z.z := B_ab.z.z + _DR_alfa.z * _DR_beta.z*alfa;
+{$ENDIF}
+end;
+
+
+class procedure T_SSE.Add(var a: T_Vect; const C: real; const b: T_Vect);
+begin
+  a.x := a.x+b.x*C;
+  a.y := a.y+b.y*C;
+  a.z := a.z+b.z*C;
+end;
+
+class procedure T_SSE.Add(var a: T_Vect; const C: real; const b: T_Vect;
+    const d: real);
+begin
+  Add(a, B, C*d);
+end;
+
+class procedure T_SSE.Add(var a_i: T_Vect; const b_ij: T_Tens; const C_j:
+    T_Vect);
+{$IFDEF CPUX64}
+asm
+{  a_i.x := a_i.x+b_ij.x.x*C_j.x+b_ij.x.y*C_j.y+b_ij.x.z*C_j.z ;
+  a_i.y := a_i.y+b_ij.y.x*C_j.x+b_ij.y.y*C_j.y+b_ij.y.z*C_j.z ;
+  a_i.z := a_i.z+b_ij.z.x*C_j.x+b_ij.z.y*C_j.y+b_ij.z.z*C_j.z ;}
+  // C_j: RAX,
+  // b_ij:  RDX, r8   (?)
+  // a_i: RCX
+
+
+    .NOFRAME
+    .SAVENV XMM5
+    .SAVENV XMM6
+    .SAVENV XMM7
+
+    movupd  XMM6, oWORD[C_j]         // XMM6 = c0 | c1
+    movsd   XMM7, qWORD[C_j+16]      // XMM7 = c2 | w
+
+    movupd  XMM4, oWORD[a_i]         // XMM4 = a0 | a1
+    movsd   XMM5, qWORD[a_i+16]      // XMM5 = a2 | w
+
+    movupd  XMM0, oWORD[ b_ij+0  ]  //  XMM0 = m00 | m01
+    movsd   XMM1, qWORD[ b_ij+16 ]  //  XMM1 = m02 | w
+
+    movupd  XMM2, oWORD[ b_ij+32 ]  //  XMM2 = m10 | m11
+    movsd   XMM3, qWORD[ b_ij+48 ]  //  XMM3 = m12 | w
+
+
+    mulpd   XMM0, XMM6            // xmm0 = m00*c0 | m01*c1
+    mulsd   XMM1, XMM7            // xmm1 = m02*c2 | 0
+    haddpd  XMM0, XMM1           // xmm0 = m00*c0 + m01*c1 | m02*c2
+
+    mulpd   XMM2, XMM6            // xmm2 = m10*c0 | m11*c1
+    mulsd   XMM3, XMM7            // xmm3 = m22*c2 | 0
+    haddpd  XMM2, XMM3           // xmm2 = m10*c0 + m11*c1 | m12*c2
+
+
+    haddpd  XMM0, XMM2           // xmm0 = m00*c0 + m01*c1 + m02*c2 | m10*c0 + m11*c1 + m12*c2
+    addpd   XMM4, XMM0
+
+    movupd  XMM2, oWORD[ b_ij+64 ]  //  XMM2 = m20 | m21
+    movsd   XMM3, qWORD[ b_ij+80 ]  //  XMM3 = m22 | w
+
+    mulpd   XMM2, XMM6            // XMM2 = m20*c0 | m21*c1
+    mulsd   XMM3, XMM7            // XMM3 = m22*c2 | 0
+    movlhps XMM5, XMM3          // XMM5 = a2, m22*c2
+
+    haddpd  XMM5, XMM2           // xmm3 = m22*c2+a2 | m20*c0 + m21*c1
+    haddpd  XMM5, XMM5
+
+    movupd  oWORD[a_i], XMM4
+    movsd   qWORD[a_i+16], XMM5
+{$ELSE}
+begin
+  a_i.x := a_i.x+b_ij.x.x*C_j.x+b_ij.x.y*C_j.y+b_ij.x.z*C_j.z;
+  a_i.y := a_i.y+b_ij.y.x*C_j.x+b_ij.y.y*C_j.y+b_ij.y.z*C_j.z;
+  a_i.z := a_i.z+b_ij.z.x*C_j.x+b_ij.z.y*C_j.y+b_ij.z.z*C_j.z;
+{$IFEND CPUX64}
+
+end;
+
+
 class procedure T_SSE.Add(var a_i: T_Vect; const b_ij: T_Tens; const C_j:
     T_Vect; const N: integer);
  {$IFDEF CPUX64}
@@ -2368,68 +2855,154 @@ begin
 
 end;
 
+
 class procedure T_SSE.Add(var a_i: T_Vect; const b_ij: T_Tens; const C_j:
-    T_Vect);
+    T_Vect4);
 {$IFDEF CPUX64}
 asm
-{  a_i.x := a_i.x+b_ij.x.x*C_j.x+b_ij.x.y*C_j.y+b_ij.x.z*C_j.z ;
-  a_i.y := a_i.y+b_ij.y.x*C_j.x+b_ij.y.y*C_j.y+b_ij.y.z*C_j.z ;
-  a_i.z := a_i.z+b_ij.z.x*C_j.x+b_ij.z.y*C_j.y+b_ij.z.z*C_j.z ;}
-  // C_j: RAX,
-  // b_ij:  RDX, r8   (?)
-  // a_i: RCX
-
-
+// TEST COVERED
     .NOFRAME
     .SAVENV XMM5
     .SAVENV XMM6
     .SAVENV XMM7
 
-    movupd  XMM6, oWORD[C_j]         // XMM6 = c0 | c1
-    movsd   XMM7, qWORD[C_j+16]      // XMM7 = c2 | w
+
+    movapd  XMM6, oWORD[C_j]         // XMM6 = c-1 | c0
+    movapd  XMM7, oWORD[C_j+16]      // XMM7 = c1  | c2
+
+    movhlps XMM6, XMM6
+    movlhps XMM6, XMM7
+    movhlps XMM7, XMM7
 
     movupd  XMM4, oWORD[a_i]         // XMM4 = a0 | a1
-    movsd   XMM5, qWORD[a_i+16]      // XMM5 = a2 | w
+    movsd  XMM5, qWORD[a_i+16]      // XMM5 = a2 | w
 
     movupd  XMM0, oWORD[ b_ij+0  ]  //  XMM0 = m00 | m01
-    movsd   XMM1, qWORD[ b_ij+16 ]  //  XMM1 = m02 | w
+    movsd  XMM1, qWORD[ b_ij+16 ]  //  XMM1 = m02 | w
 
     movupd  XMM2, oWORD[ b_ij+32 ]  //  XMM2 = m10 | m11
-    movsd   XMM3, qWORD[ b_ij+48 ]  //  XMM3 = m12 | w
+    movsd  XMM3, qWORD[ b_ij+48 ]  //  XMM3 = m12 | w
 
 
-    mulpd   XMM0, XMM6            // xmm0 = m00*c0 | m01*c1
-    mulsd   XMM1, XMM7            // xmm1 = m02*c2 | 0
-    haddpd  XMM0, XMM1           // xmm0 = m00*c0 + m01*c1 | m02*c2
+    mulpd XMM0, XMM6            // xmm0 = m00*c0 | m01*c1
+    mulsd XMM1, XMM7            // xmm1 = m02*c2 | 0
+    haddpd XMM0, XMM1           // xmm0 = m00*c0 + m01*c1 | m02*c2
 
-    mulpd   XMM2, XMM6            // xmm2 = m10*c0 | m11*c1
-    mulsd   XMM3, XMM7            // xmm3 = m22*c2 | 0
-    haddpd  XMM2, XMM3           // xmm2 = m10*c0 + m11*c1 | m12*c2
+    mulpd XMM2, XMM6            // xmm2 = m10*c0 | m11*c1
+    mulsd XMM3, XMM7            // xmm3 = m22*c2 | 0
+    haddpd XMM2, XMM3           // xmm2 = m10*c0 + m11*c1 | m12*c2
 
 
-    haddpd  XMM0, XMM2           // xmm0 = m00*c0 + m01*c1 + m02*c2 | m10*c0 + m11*c1 + m12*c2
-    addpd   XMM4, XMM0
+    haddpd XMM0, XMM2           // xmm0 = m00*c0 + m01*c1 + m02*c2 | m10*c0 + m11*c1 + m12*c2
+    addpd  XMM4, XMM0
 
     movupd  XMM2, oWORD[ b_ij+64 ]  //  XMM2 = m20 | m21
-    movsd   XMM3, qWORD[ b_ij+80 ]  //  XMM3 = m22 | w
+    movsd  XMM3, qWORD[ b_ij+80 ]  //  XMM3 = m22 | w
 
-    mulpd   XMM2, XMM6            // XMM2 = m20*c0 | m21*c1
-    mulsd   XMM3, XMM7            // XMM3 = m22*c2 | 0
+    mulpd XMM2, XMM6            // XMM2 = m20*c0 | m21*c1
+    mulsd XMM3, XMM7            // XMM3 = m22*c2 | 0
     movlhps XMM5, XMM3          // XMM5 = a2, m22*c2
 
-    haddpd  XMM5, XMM2           // xmm3 = m22*c2+a2 | m20*c0 + m21*c1
-    haddpd  XMM5, XMM5
+    haddpd XMM5, XMM2           // xmm3 = m22*c2+a2 | m20*c0 + m21*c1
+    haddpd XMM5, XMM5
 
     movupd  oWORD[a_i], XMM4
-    movsd   qWORD[a_i+16], XMM5
+    movsd  qWORD[a_i+16], XMM5
+
+
 {$ELSE}
 begin
-  a_i.x := a_i.x+b_ij.x.x*C_j.x+b_ij.x.y*C_j.y+b_ij.x.z*C_j.z;
-  a_i.y := a_i.y+b_ij.y.x*C_j.x+b_ij.y.y*C_j.y+b_ij.y.z*C_j.z;
-  a_i.z := a_i.z+b_ij.z.x*C_j.x+b_ij.z.y*C_j.y+b_ij.z.z*C_j.z;
-{$IFEND CPUX64}
-
+  a_i.x := a_i.x+ b_ij.x.x*C_j[0]+b_ij.x.y*C_j[1]+b_ij.x.z*C_j[2] ;
+  a_i.y := a_i.y+ b_ij.y.x*C_j[0]+b_ij.y.y*C_j[1]+b_ij.y.z*C_j[2] ;
+  a_i.z := a_i.z+ b_ij.z.x*C_j[0]+b_ij.z.y*C_j[1]+b_ij.z.z*C_j[2] ;
+{$ENDIF}
 end;
+
+
+class procedure T_SSE.Add(var a: T_Vect; const b: T_Vect);
+{$IFDEF CPUX64}
+asm
+  .NOFRAME
+
+  movapd XMM0, oWORD[ b ]
+  movapd XMM1, oWORD[ b + 2*FloatSize ]
+
+  addpd XMM0, oWORD[ a]
+  addsd XMM1, qWORD[ a+ 2*FloatSize]
+
+  movapd oWORD[a             ], XMM0
+  movlpd qWORD[a+ 2*FloatSize], XMM1
+
+
+{$ELSE}
+begin
+  a.x := a.x+b.x;
+  a.y := a.y+b.y;
+  a.z := a.z+b.z;
+{$ENDIF}
+end;
+
+
+class procedure T_SSE.Add(var a: T_Vect; const b: T_Vect; const C: real);
+{$IFDEF CPUX64}
+asm
+  .NOFRAME
+
+  movapd  XMM2, C
+  movlhps XMM2, XMM2
+  movapd XMM0, oWORD[ b ]
+  movapd XMM1, oWORD[ b + 2*FloatSize ]
+  mulpd XMM0, XMM2
+  mulsd XMM1, XMM2
+
+  addpd XMM0, oWORD[ a]
+  addsd XMM1, qWORD[ a+ 2*FloatSize]
+
+  movapd oWORD[a             ], XMM0
+  movlpd qWORD[a+ 2*FloatSize], XMM1
+
+
+{$ELSE}
+begin
+  a.x := a.x+b.x*C;
+  a.y := a.y+b.y*C;
+  a.z := a.z+b.z*C;
+{$ENDIF}
+end;
+
+
+class procedure T_SSE.Add(var a: T_Vect; const b : T_Vect; const c, V: real);
+{$IFDEF CPUX64}
+asm
+  .NOFRAME
+
+  movapd   XMM0, c
+  movapd   XMM1, V
+
+  mulsd   XMM0, XMM1
+  movlhps XMM0, XMM0
+
+  movapd XMM1, oWORD[b + 0*FloatSize]
+  movapd XMM2, oWORD[b + 2*FloatSize]
+
+  mulpd XMM1, XMM0
+  mulpd XMM2, XMM0
+
+  addpd XMM1, oWORD[ a + 0*FloatSize ]
+  addsd XMM2, qWORD[ a + 2*FloatSize ]
+
+  movapd oWORD[ a + 0*FloatSize ], XMM1
+  movlpd qWORD[ a + 2*FloatSize ], XMM2
+
+
+{$ELSE}
+begin
+  a.x := a.x + b.x*c*V;
+  a.y := a.y + b.y*c*V;
+  a.z := a.z + b.z*c*V;
+{$ENDIF}
+end;
+
 
 class procedure T_SSE.Add(var a_j: T_Vect; const C_i: T_Vect; const b_ij:
     T_Tens);
@@ -2504,6 +3077,59 @@ begin
 {$ENDIF CPUX64}
 
 end;
+
+
+class procedure T_SSE.Add(var a_i: T_Vect; const C_j: T_Vect; const b_ij:
+    T_Tens; const K: real);
+{$IFDEF CPUX64}
+asm
+  .NOFRAME
+
+  movapd   XMM2, K
+  movapd   XMM0, oWORD[ C_j + 0*FloatSize ]
+  movapd   XMM1, oWORD[ C_j + 2*FloatSize ]
+
+
+  movlhps XMM2, XMM2
+  mulpd   XMM0, XMM2
+  mulpd   XMM1, XMM2
+
+
+  movapd  XMM2, oWORD[ b_ij + 0*FloatSize ]
+  movapd  XMM3, oWORD[ b_ij + 2*FloatSize ]
+  mulpd   XMM2, XMM0    // xmm2 = b.xx*c.x | b.xy*c.y
+  mulsd   XMM3, XMM1    // xmm3 = b.xz*c.z | trash
+  addsd   XMM2, XMM3    // xmm2 = b.xx*c.x + b.xz*c.z| b.xy*c.y
+
+
+  movapd  XMM3, oWORD[ b_ij + 4*FloatSize ]
+  movapd  XMM4, oWORD[ b_ij + 6*FloatSize ]
+  mulpd   XMM3, XMM0    // xmm3 = b.yx*c.x | b.yy*c.y
+  mulsd   XMM4, XMM1    // xmm4 = b.yz*c.z | trash
+  addsd   XMM3, XMM4    // xmm3 = b.yx*c.x + b.yz*c.z| b.yy*c.y
+  haddpd  XMM2, XMM3
+
+  addpd   XMM2, oWORD[ a_i + 0*FloatSize]
+  movapd oWORD[ a_i + 0*FloatSize ], XMM2
+
+  movapd  XMM2, oWORD[ b_ij +  8*FloatSize ]
+  movapd  XMM3, oWORD[ b_ij + 10*FloatSize ]
+  mulpd   XMM2, XMM0    // xmm2 = b.zx*c.x | b.zy*c.y
+  mulsd   XMM3, XMM1    // xmm3 = b.zz*c.z | trash
+  movhpd  XMM3, qWORD [a_i + 2*FloatSize] //// xmm3 = b.zz*c.z | a_i.z
+
+  haddpd XMM2, XMM3  // XMM2 =  b.zx*c.x + b.zy*c.y | b.zz*c.z + a_i.z
+  haddpd XMM2, XMM2  // XMM2 =  b.zx*c.x + b.zy*c.y + b.zz*c.z + a_i.z  | twice
+  movlpd  qWORD [a_i + 2*FloatSize], XMM2
+
+{$ELSE}
+begin
+  a_i.x := a_i.x+K*(b_ij.x.x*C_j.x+b_ij.x.y*C_j.y+b_ij.x.z*C_j.z) ;
+  a_i.y := a_i.y+K*(b_ij.y.x*C_j.x+b_ij.y.y*C_j.y+b_ij.y.z*C_j.z) ;
+  a_i.z := a_i.z+K*(b_ij.z.x*C_j.x+b_ij.z.y*C_j.y+b_ij.z.z*C_j.z) ;
+{$ENDIF}
+end;
+
 
 class procedure T_SSE.Add(var a_j: T_Vect; const C_i: T_VectArr; const b_ij:
     T_TensorArr; const N: integer);
@@ -2623,184 +3249,6 @@ begin
 
 end;
 
-class procedure T_SSE.Add(var a_ij: T_M4; const b_ij:
-    T_M4; const c: real);
-{$IFDEF CPUX64}
-asm
-// TEST COVERED
-  .NOFRAME
-
-
-  movapd  XMM4, c  // calling convention set as "Register", "C" stored in XMM2 as VALUE!!!
-                   // "c" is not Pointer!!!!
-  movlhps XMM4, XMM4
-
-
-  movapd XMM0, oWORD[b_ij + 0*FloatSize ]
-  movapd XMM1, oWORD[b_ij + 2*FloatSize ]
-  movapd XMM2, oWORD[b_ij + 4*FloatSize ]
-  movapd XMM3, oWORD[b_ij + 6*FloatSize ]
-
-  mulpd  XMM0, XMM4
-  mulpd  XMM1, XMM4
-  mulpd  XMM2, XMM4
-  mulpd  XMM3, XMM4
-
-  addpd  XMM0, oWORD[a_ij + 0*FloatSize ]
-  addpd  XMM1, oWORD[a_ij + 2*FloatSize ]
-  addpd  XMM2, oWORD[a_ij + 4*FloatSize ]
-  addpd  XMM3, oWORD[a_ij + 6*FloatSize ]
-
-  movapd oWORD[a_ij + 0*FloatSize ], XMM0
-  movapd oWORD[a_ij + 2*FloatSize ], XMM1
-  movapd oWORD[a_ij + 4*FloatSize ], XMM2
-  movapd oWORD[a_ij + 6*FloatSize ], XMM3
-
-  movapd XMM0, oWORD[b_ij +  8*FloatSize ]
-  movapd XMM1, oWORD[b_ij + 10*FloatSize ]
-  movapd XMM2, oWORD[b_ij + 12*FloatSize ]
-  movapd XMM3, oWORD[b_ij + 14*FloatSize ]
-
-  mulpd  XMM0, XMM4
-  mulpd  XMM1, XMM4
-  mulpd  XMM2, XMM4
-  mulpd  XMM3, XMM4
-
-  addpd  XMM0, oWORD[a_ij + 8*FloatSize ]
-  addpd  XMM1, oWORD[a_ij + 10*FloatSize ]
-  addpd  XMM2, oWORD[a_ij + 12*FloatSize ]
-  addpd  XMM3, oWORD[a_ij + 14*FloatSize ]
-
-  movapd oWORD[a_ij +  8*FloatSize ], XMM0
-  movapd oWORD[a_ij + 10*FloatSize ], XMM1
-  movapd oWORD[a_ij + 12*FloatSize ], XMM2
-  movapd oWORD[a_ij + 14*FloatSize ], XMM3
-
-{$ELSE} {X32 MODE}  begin
-  a_ij[ 0, 0] := a_ij[ 0, 0] + b_ij[ 0, 0] *c;
-  a_ij[ 0, 1] := a_ij[ 0, 1] + b_ij[ 0, 1] *c;
-  a_ij[ 0, 2] := a_ij[ 0, 2] + b_ij[ 0, 2] *c;
-  a_ij[ 0, 3] := a_ij[ 0, 3] + b_ij[ 0, 3] *c;
-
-  a_ij[ 1, 0] := a_ij[ 1, 0] + b_ij[ 1, 0] *c;
-  a_ij[ 1, 1] := a_ij[ 1, 1] + b_ij[ 1, 1] *c;
-  a_ij[ 1, 2] := a_ij[ 1, 2] + b_ij[ 1, 2] *c;
-  a_ij[ 1, 3] := a_ij[ 1, 3] + b_ij[ 1, 3] *c;
-
-  a_ij[ 2, 0] := a_ij[ 2, 0] + b_ij[ 2, 0] *c;
-  a_ij[ 2, 1] := a_ij[ 2, 1] + b_ij[ 2, 1] *c;
-  a_ij[ 2, 2] := a_ij[ 2, 2] + b_ij[ 2, 2] *c;
-  a_ij[ 2, 3] := a_ij[ 2, 3] + b_ij[ 2, 3] *c;
-
-  a_ij[ 3, 0] := a_ij[ 3, 0] + b_ij[ 3, 0] *c;
-  a_ij[ 3, 1] := a_ij[ 3, 1] + b_ij[ 3, 1] *c;
-  a_ij[ 3, 2] := a_ij[ 3, 2] + b_ij[ 3, 2] *c;
-  a_ij[ 3, 3] := a_ij[ 3, 3] + b_ij[ 3, 3] *c;
-{$ENDIF}
-end;
-
-class procedure T_SSE.Add(var a_ij: T_M4; const DC_i, DC_j:
-    T_Vect4);
-{$IFDEF CPUX64}
-asm
-// TEST COVERED
-  .NOFRAME
-  .SAVENV XMM4
-  .SAVENV XMM5
-
-
-  movapd XMM0, oWORD[ DC_i + 0*FloatSize ]
-  movapd XMM1, oWORD[ DC_i + 2*FloatSize ]
-
-  movapd XMM2, oWORD[ DC_j + 0*FloatSize ]
-  movapd XMM3, oWORD[ DC_j + 2*FloatSize ]
-
-  ///// a_ij[-1]
-  movapd  XMM4, XMM0
-  movlhps XMM4, XMM4 // XMM4 = DC_i[-1] |  DC_i[-1]
-
-  movapd  XMM5, XMM4 // XMM5 = DC_i[-1] |  DC_i[-1]
-
-  mulpd   XMM4, XMM2 // XMM4 = DC_i[-1] * (DC_j[-1] | DC_j[ 0])
-  mulpd   XMM5, XMM3 // XMM5 = DC_i[-1] * (DC_j[ 1] | DC_j[ 2])
-
-  addpd XMM4, oWORD[a_ij +  0*FloatSize ]
-  addpd XMM5, oWORD[a_ij +  2*FloatSize ]
-
-  movapd oWORD[a_ij +  0*FloatSize ], XMM4
-  movapd oWORD[a_ij +  2*FloatSize ], XMM5
-
-  ///// Next stringL a_ij[0]
-  ADD a_ij, 4*FloatSize
-
-  movapd  XMM4, XMM0
-  movhlps XMM4, XMM4 // XMM4 = DC_i[ 0] |  DC_i[ 0]
-
-  movapd  XMM5, XMM4 // XMM5 = DC_i[ 0] |  DC_i[ 0]
-  mulpd   XMM4, XMM2 // XMM4 = DC_i[ 0] * (DC_j[-1] | DC_j[ 0])
-  mulpd   XMM5, XMM3 // XMM5 = DC_i[ 0] * (DC_j[ 1] | DC_j[ 2])
-
-  addpd XMM4, oWORD[a_ij +  0*FloatSize ]
-  addpd XMM5, oWORD[a_ij +  2*FloatSize ]
-
-  movapd oWORD[a_ij +  0*FloatSize ], XMM4
-  movapd oWORD[a_ij +  2*FloatSize ], XMM5
-
-  ///// Next string  a_ij[1]
-  ADD a_ij, 4*FloatSize
-
-  movapd  XMM4, XMM1
-  movlhps XMM4, XMM4 // XMM4 = DC_i[ 1] |  DC_i[ 1]
-
-  movapd  XMM5, XMM4 // XMM5 = DC_i[ 1] |  DC_i[ 1]
-  mulpd   XMM4, XMM2 // XMM4 = DC_i[ 1] * (DC_j[-1] | DC_j[ 0])
-  mulpd   XMM5, XMM3 // XMM5 = DC_i[ 1] * (DC_j[ 1] | DC_j[ 2])
-
-  addpd XMM4, oWORD[a_ij +  0*FloatSize ]
-  addpd XMM5, oWORD[a_ij +  2*FloatSize ]
-
-  movapd oWORD[a_ij +  0*FloatSize ], XMM4
-  movapd oWORD[a_ij +  2*FloatSize ], XMM5
-
-  ///// Next string   a_ij[2]
-  ADD a_ij, 4*FloatSize
-
-  movapd  XMM4, XMM1
-  movhlps XMM4, XMM4 // XMM4 = DC_i[ 2] |  DC_i[ 2]
-
-  movapd  XMM5, XMM4 // XMM5 = DC_i[ 2] |  DC_i[ 2]
-  mulpd   XMM4, XMM2 // XMM4 = DC_i[ 2] * (DC_j[-1] | DC_j[ 0])
-  mulpd   XMM5, XMM3 // XMM5 = DC_i[ 2] * (DC_j[ 1] | DC_j[ 2])
-
-  addpd XMM4, oWORD[a_ij +  0*FloatSize ]
-  addpd XMM5, oWORD[a_ij +  2*FloatSize ]
-
-  movapd oWORD[a_ij +  0*FloatSize ], XMM4
-  movapd oWORD[a_ij +  2*FloatSize ], XMM5
-
-
-{$ELSE} {X32 MODE}begin
-  a_ij[ 0, 0] := a_ij[ 0, 0] + DC_j[ 0]*DC_i[ 0];
-  a_ij[ 0, 1] := a_ij[ 0, 1] + DC_j[ 1]*DC_i[ 0];
-  a_ij[ 0, 2] := a_ij[ 0, 2] + DC_j[ 2]*DC_i[ 0];
-  a_ij[ 0, 3] := a_ij[ 0, 3] + DC_j[ 3]*DC_i[ 0];
-
-  a_ij[ 1, 0] := a_ij[ 1, 0] + DC_j[ 0]*DC_i[ 1];
-  a_ij[ 1, 1] := a_ij[ 1, 1] + DC_j[ 1]*DC_i[ 1];
-  a_ij[ 1, 2] := a_ij[ 1, 2] + DC_j[ 2]*DC_i[ 1];
-  a_ij[ 1, 3] := a_ij[ 1, 3] + DC_j[ 3]*DC_i[ 1];
-
-  a_ij[ 2, 0] := a_ij[ 2, 0] + DC_j[ 0]*DC_i[ 2];
-  a_ij[ 2, 1] := a_ij[ 2, 1] + DC_j[ 1]*DC_i[ 2];
-  a_ij[ 2, 2] := a_ij[ 2, 2] + DC_j[ 2]*DC_i[ 2];
-  a_ij[ 2, 3] := a_ij[ 2, 3] + DC_j[ 3]*DC_i[ 2];
-
-  a_ij[ 3, 0] := a_ij[ 3, 0] + DC_j[ 0]*DC_i[ 3];
-  a_ij[ 3, 1] := a_ij[ 3, 1] + DC_j[ 1]*DC_i[ 3];
-  a_ij[ 3, 2] := a_ij[ 3, 2] + DC_j[ 2]*DC_i[ 3];
-  a_ij[ 3, 3] := a_ij[ 3, 3] + DC_j[ 3]*DC_i[ 3];
-{$ENDIF}
-end;
 
 class procedure T_SSE.Add(var DC_i: T_Vect4; const a_ij:
     T_M4; const DC_j: T_Vect4);
@@ -2883,6 +3331,15 @@ asm
 
 {$ENDIF}
 end;
+
+class procedure T_SSE.Add(var a: T_Vect4; const b: T_Vect; const koeff:
+    real);
+begin
+  a[ 0] := a[ 0]+b.X*koeff;
+  a[ 1] := a[ 1]+b.Y*koeff;
+  a[ 2] := a[ 2]+b.Z*koeff;
+end;
+
 class procedure T_SSE.Add(var a: T_Vect4; const b: T_Vect4);
 begin
   a[0] := a[0]+b[0];
@@ -2898,431 +3355,6 @@ begin
   a[ 1] := a[ 1]+b[ 1]*koeff;
   a[ 2] := a[ 2]+b[ 2]*koeff;
   a[ 3] := a[ 3]+b[ 3]*koeff;
-end;
-
-class procedure T_SSE.Add(var a: T_Vect4; const b: T_Vect; const koeff:
-    real);
-begin
-  a[ 0] := a[ 0]+b.X*koeff;
-  a[ 1] := a[ 1]+b.Y*koeff;
-  a[ 2] := a[ 2]+b.Z*koeff;
-end;
-
-class procedure T_SSE.Add(var a: T_Tens; const b: T_Tens);
-begin
-  a.x.x := a.x.x + b.x.x;
-  a.y.x := a.y.x + b.y.x;
-  a.z.x := a.z.x + b.z.x;
-
-  a.x.y := a.x.y + b.x.y;
-  a.y.y := a.y.y + b.y.y;
-  a.z.y := a.z.y + b.z.y;
-
-  a.x.z := a.x.z + b.x.z;
-  a.y.z := a.y.z + b.y.z;
-  a.z.z := a.z.z + b.z.z;
-end;
-
-class procedure T_SSE.Add(var a: T_Tens; const b: T_Tens; const koeff: real);
-begin
-  a.x.x := a.x.x + b.x.x*koeff;
-  a.x.y := a.x.y + b.x.y*koeff;
-  a.x.z := a.x.z + b.x.z*koeff;
-
-  a.y.x := a.y.x + b.y.x*koeff;
-  a.y.y := a.y.y + b.y.y*koeff;
-  a.y.z := a.y.z + b.y.z*koeff;
-
-  a.z.x := a.z.x + b.z.x*koeff;
-  a.z.y := a.z.y + b.z.y*koeff;
-  a.z.z := a.z.z + b.z.z*koeff;
-end;
-
-class procedure T_SSE.Add(var a: T_Tens; const b: real);
-begin
-  a.x.x := a.x.x + b;
-  a.y.y := a.y.y + b;
-  a.z.z := a.z.z + b;
-end;
-
-class procedure T_SSE.Add(var B_ab: T_Tens; const _DR_alfa, _DR_beta: T_Vect);
-{$IFDEF CPUX64}
-asm
-// TEST COVERED
-  .NOFRAME
-  .SAVENV XMM4
-  .SAVENV XMM5
-  .SAVENV XMM6
-
-  movapd XMM0, oWORD[ _DR_alfa + 0*FloatSize ]
-  movapd XMM1, oWORD[ _DR_alfa + 2*FloatSize ]
-
-  movapd XMM2, oWORD[ _DR_beta + 0*FloatSize ]
-  movapd XMM3, oWORD[ _DR_beta + 2*FloatSize ]
-
-  ///// a_ij[-1]
-  movapd  XMM4, XMM0
-  movlhps XMM4, XMM4 // XMM4 = _DR_alfa[-1] |  _DR_alfa[-1]
-
-  movapd  XMM5, XMM4 // XMM5 = _DR_alfa[-1] |  _DR_alfa[-1]
-
-  mulpd   XMM4, XMM2 // XMM4 = _DR_alfa[-1] * (DC_j[-1] | DC_j[ 0])
-  mulpd   XMM5, XMM3 // XMM5 = _DR_alfa[-1] * (DC_j[ 1] | DC_j[ 2])
-
-  addpd XMM4, oWORD[B_ab +  0*FloatSize ]
-  addpd XMM5, oWORD[B_ab +  2*FloatSize ]
-
-  movapd oWORD[B_ab +  0*FloatSize ], XMM4
-  movlpd qWORD[B_ab +  2*FloatSize ], XMM5
-
-  ///// Next stringL a_ij[0]
-  ADD B_ab, 4*FloatSize
-
-  movapd  XMM4, XMM0
-  movhlps XMM4, XMM4 // XMM4 = _DR_alfa[ 0] |  _DR_alfa[ 0]
-
-  movapd  XMM5, XMM4 // XMM5 = _DR_alfa[ 0] |  _DR_alfa[ 0]
-  mulpd   XMM4, XMM2 // XMM4 = _DR_alfa[ 0] * (DC_j[-1] | DC_j[ 0])
-  mulpd   XMM5, XMM3 // XMM5 = _DR_alfa[ 0] * (DC_j[ 1] | DC_j[ 2])
-
-  addpd XMM4, oWORD[B_ab +  0*FloatSize ]
-  addpd XMM5, oWORD[B_ab +  2*FloatSize ]
-
-  movapd oWORD[B_ab +  0*FloatSize ], XMM4
-  movlpd qWORD[B_ab +  2*FloatSize ], XMM5
-
-  ///// Next string  a_ij[1]
-  ADD B_ab, 4*FloatSize
-
-  movapd  XMM4, XMM1
-  movlhps XMM4, XMM4 // XMM4 = _DR_alfa[ 1] |  _DR_alfa[ 1]
-
-  movapd  XMM5, XMM4 // XMM5 = _DR_alfa[ 1] |  DC_i[ 1]
-  mulpd   XMM4, XMM2 // XMM4 = _DR_alfa[ 1] * (DC_j[-1] | DC_j[ 0])
-  mulpd   XMM5, XMM3 // XMM5 = _DR_alfa[ 1] * (DC_j[ 1] | DC_j[ 2])
-
-  addpd XMM4, oWORD[B_ab +  0*FloatSize ]
-  addpd XMM5, oWORD[B_ab +  2*FloatSize ]
-
-  movapd oWORD[B_ab +  0*FloatSize ], XMM4
-  movlpd qWORD[B_ab +  2*FloatSize ], XMM5
-
-
-{$ELSE} {X32 MODE}begin
-    // B[alfa, beta ] = _DR[alfa]*DC_beta,  dR[-1] = 1.0;
-
-    B_ab.x.x := B_ab.x.x + _DR_alfa.x * _DR_beta.x;
-    B_ab.x.y := B_ab.x.y + _DR_alfa.x * _DR_beta.y;
-    B_ab.x.z := B_ab.x.z + _DR_alfa.x * _DR_beta.z;
-
-
-    B_ab.y.x := B_ab.y.x + _DR_alfa.y * _DR_beta.x;
-    B_ab.y.y := B_ab.y.y + _DR_alfa.y * _DR_beta.y;
-    B_ab.y.z := B_ab.y.z + _DR_alfa.y * _DR_beta.z;
-
-
-    B_ab.z.x := B_ab.z.x + _DR_alfa.z * _DR_beta.x;
-    B_ab.z.y := B_ab.z.y + _DR_alfa.z * _DR_beta.y;
-    B_ab.z.z := B_ab.z.z + _DR_alfa.z * _DR_beta.z;
-{$ENDIF}
-end;
-
-class procedure T_SSE.Add(var B_ab: T_Tens; const _DR_alfa, _DR_beta: T_Vect;
-    const alfa: real);
-{$IFDEF CPUX64}
-asm
-// TEST COVERED
-
-  .NOFRAME
-  .SAVENV XMM4
-  .SAVENV XMM5
-  .SAVENV XMM6
-
-//  movlpd  XMM4, qWORD[alfa]
-  movapd  XMM4, alfa // Alfa stored in XMM3! becouse of "register" calling convention
-  movlhps XMM4, XMM4
-  movapd XMM0, oWORD[ _DR_alfa + 0*FloatSize ]
-  movapd XMM1, oWORD[ _DR_alfa + 2*FloatSize ]
-
-  mulpd XMM0, XMM4 //  _DR_alfa* Coeff
-  mulsd XMM1, XMM4 //
-
-  movapd XMM2, oWORD[ _DR_beta + 0*FloatSize ]
-  movapd XMM3, oWORD[ _DR_beta + 2*FloatSize ]
-
-  ///// a_ij[-1]
-  movapd  XMM4, XMM0
-  movlhps XMM4, XMM4 // XMM4 = _DR_alfa[-1] |  _DR_alfa[-1]
-
-  movapd  XMM5, XMM4 // XMM5 = _DR_alfa[-1] |  _DR_alfa[-1]
-
-  mulpd   XMM4, XMM2 // XMM4 = _DR_alfa[-1] * (DC_j[-1] | DC_j[ 0])
-  mulpd   XMM5, XMM3 // XMM5 = _DR_alfa[-1] * (DC_j[ 1] | DC_j[ 2])
-
-  addpd XMM4, oWORD[B_ab +  0*FloatSize ]
-  addpd XMM5, oWORD[B_ab +  2*FloatSize ]
-
-  movapd oWORD[B_ab +  0*FloatSize ], XMM4
-  movlpd qWORD[B_ab +  2*FloatSize ], XMM5
-
-  ///// Next stringL a_ij[0]
-  ADD B_ab, 4*FloatSize
-
-  movapd  XMM4, XMM0
-  movhlps XMM4, XMM4 // XMM4 = _DR_alfa[ 0] |  _DR_alfa[ 0]
-
-  movapd  XMM5, XMM4 // XMM5 = _DR_alfa[ 0] |  _DR_alfa[ 0]
-  mulpd   XMM4, XMM2 // XMM4 = _DR_alfa[ 0] * (DC_j[-1] | DC_j[ 0])
-  mulpd   XMM5, XMM3 // XMM5 = _DR_alfa[ 0] * (DC_j[ 1] | DC_j[ 2])
-
-  addpd XMM4, oWORD[B_ab +  0*FloatSize ]
-  addpd XMM5, oWORD[B_ab +  2*FloatSize ]
-
-  movapd oWORD[B_ab +  0*FloatSize ], XMM4
-  movlpd qWORD[B_ab +  2*FloatSize ], XMM5
-
-  ///// Next string  a_ij[1]
-  ADD B_ab, 4*FloatSize
-
-  movapd  XMM4, XMM1
-  movlhps XMM4, XMM4 // XMM4 = _DR_alfa[ 1] |  _DR_alfa[ 1]
-
-  movapd  XMM5, XMM4 // XMM5 = _DR_alfa[ 1] |  DC_i[ 1]
-  mulpd   XMM4, XMM2 // XMM4 = _DR_alfa[ 1] * (DC_j[-1] | DC_j[ 0])
-  mulpd   XMM5, XMM3 // XMM5 = _DR_alfa[ 1] * (DC_j[ 1] | DC_j[ 2])
-
-  addpd XMM4, oWORD[B_ab +  0*FloatSize ]
-  addpd XMM5, oWORD[B_ab +  2*FloatSize ]
-
-  movapd oWORD[B_ab +  0*FloatSize ], XMM4
-  movlpd qWORD[B_ab +  2*FloatSize ], XMM5
-
-
-{$ELSE} {X32 MODE}begin
-    // B[alfa, beta ] = _DR[alfa]*DC_beta,  dR[-1] = 1.0;
-
-    B_ab.x.x := B_ab.x.x + _DR_alfa.x * _DR_beta.x*alfa;
-    B_ab.x.y := B_ab.x.y + _DR_alfa.x * _DR_beta.y*alfa;
-    B_ab.x.z := B_ab.x.z + _DR_alfa.x * _DR_beta.z*alfa;
-
-
-    B_ab.y.x := B_ab.y.x + _DR_alfa.y * _DR_beta.x*alfa;
-    B_ab.y.y := B_ab.y.y + _DR_alfa.y * _DR_beta.y*alfa;
-    B_ab.y.z := B_ab.y.z + _DR_alfa.y * _DR_beta.z*alfa;
-
-
-    B_ab.z.x := B_ab.z.x + _DR_alfa.z * _DR_beta.x*alfa;
-    B_ab.z.y := B_ab.z.y + _DR_alfa.z * _DR_beta.y*alfa;
-    B_ab.z.z := B_ab.z.z + _DR_alfa.z * _DR_beta.z*alfa;
-{$ENDIF}
-end;
-
-class procedure T_SSE.Add(var a: T_Vect; const C: real; const b: T_Vect);
-begin
-  a.x := a.x+b.x*C;
-  a.y := a.y+b.y*C;
-  a.z := a.z+b.z*C;
-end;
-
-class procedure T_SSE.Add(var a: T_Vect; const C: real; const b: T_Vect;
-    const d: real);
-begin
-  Add(a, B, C*d);
-end;
-
-class procedure T_SSE.Add(var a_i: T_Vect; const b_ij: T_Tens; const C_j:
-    T_Vect4);
-{$IFDEF CPUX64}
-asm
-// TEST COVERED
-    .NOFRAME
-    .SAVENV XMM5
-    .SAVENV XMM6
-    .SAVENV XMM7
-
-
-    movapd  XMM6, oWORD[C_j]         // XMM6 = c-1 | c0
-    movapd  XMM7, oWORD[C_j+16]      // XMM7 = c1  | c2
-
-    movhlps XMM6, XMM6
-    movlhps XMM6, XMM7
-    movhlps XMM7, XMM7
-
-    movupd  XMM4, oWORD[a_i]         // XMM4 = a0 | a1
-    movsd  XMM5, qWORD[a_i+16]      // XMM5 = a2 | w
-
-    movupd  XMM0, oWORD[ b_ij+0  ]  //  XMM0 = m00 | m01
-    movsd  XMM1, qWORD[ b_ij+16 ]  //  XMM1 = m02 | w
-
-    movupd  XMM2, oWORD[ b_ij+32 ]  //  XMM2 = m10 | m11
-    movsd  XMM3, qWORD[ b_ij+48 ]  //  XMM3 = m12 | w
-
-
-    mulpd XMM0, XMM6            // xmm0 = m00*c0 | m01*c1
-    mulsd XMM1, XMM7            // xmm1 = m02*c2 | 0
-    haddpd XMM0, XMM1           // xmm0 = m00*c0 + m01*c1 | m02*c2
-
-    mulpd XMM2, XMM6            // xmm2 = m10*c0 | m11*c1
-    mulsd XMM3, XMM7            // xmm3 = m22*c2 | 0
-    haddpd XMM2, XMM3           // xmm2 = m10*c0 + m11*c1 | m12*c2
-
-
-    haddpd XMM0, XMM2           // xmm0 = m00*c0 + m01*c1 + m02*c2 | m10*c0 + m11*c1 + m12*c2
-    addpd  XMM4, XMM0
-
-    movupd  XMM2, oWORD[ b_ij+64 ]  //  XMM2 = m20 | m21
-    movsd  XMM3, qWORD[ b_ij+80 ]  //  XMM3 = m22 | w
-
-    mulpd XMM2, XMM6            // XMM2 = m20*c0 | m21*c1
-    mulsd XMM3, XMM7            // XMM3 = m22*c2 | 0
-    movlhps XMM5, XMM3          // XMM5 = a2, m22*c2
-
-    haddpd XMM5, XMM2           // xmm3 = m22*c2+a2 | m20*c0 + m21*c1
-    haddpd XMM5, XMM5
-
-    movupd  oWORD[a_i], XMM4
-    movsd  qWORD[a_i+16], XMM5
-
-
-{$ELSE}
-begin
-  a_i.x := a_i.x+ b_ij.x.x*C_j[0]+b_ij.x.y*C_j[1]+b_ij.x.z*C_j[2] ;
-  a_i.y := a_i.y+ b_ij.y.x*C_j[0]+b_ij.y.y*C_j[1]+b_ij.y.z*C_j[2] ;
-  a_i.z := a_i.z+ b_ij.z.x*C_j[0]+b_ij.z.y*C_j[1]+b_ij.z.z*C_j[2] ;
-{$ENDIF}
-end;
-
-class procedure T_SSE.Add(var a: T_Vect; const b: T_Vect);
-{$IFDEF CPUX64}
-asm
-  .NOFRAME
-
-  movapd XMM0, oWORD[ b ]
-  movapd XMM1, oWORD[ b + 2*FloatSize ]
-
-  addpd XMM0, oWORD[ a]
-  addsd XMM1, qWORD[ a+ 2*FloatSize]
-
-  movapd oWORD[a             ], XMM0
-  movlpd qWORD[a+ 2*FloatSize], XMM1
-
-
-{$ELSE}
-begin
-  a.x := a.x+b.x;
-  a.y := a.y+b.y;
-  a.z := a.z+b.z;
-{$ENDIF}
-end;
-
-class procedure T_SSE.Add(var a: T_Vect; const b: T_Vect; const C: real);
-{$IFDEF CPUX64}
-asm
-  .NOFRAME
-
-  movapd  XMM2, C
-  movlhps XMM2, XMM2
-  movapd XMM0, oWORD[ b ]
-  movapd XMM1, oWORD[ b + 2*FloatSize ]
-  mulpd XMM0, XMM2
-  mulsd XMM1, XMM2
-
-  addpd XMM0, oWORD[ a]
-  addsd XMM1, qWORD[ a+ 2*FloatSize]
-
-  movapd oWORD[a             ], XMM0
-  movlpd qWORD[a+ 2*FloatSize], XMM1
-
-
-{$ELSE}
-begin
-  a.x := a.x+b.x*C;
-  a.y := a.y+b.y*C;
-  a.z := a.z+b.z*C;
-{$ENDIF}
-end;
-
-class procedure T_SSE.Add(var a: T_Vect; const b : T_Vect; const c, V: real);
-{$IFDEF CPUX64}
-asm
-  .NOFRAME
-
-  movapd   XMM0, c
-  movapd   XMM1, V
-
-  mulsd   XMM0, XMM1
-  movlhps XMM0, XMM0
-
-  movapd XMM1, oWORD[b + 0*FloatSize]
-  movapd XMM2, oWORD[b + 2*FloatSize]
-
-  mulpd XMM1, XMM0
-  mulpd XMM2, XMM0
-
-  addpd XMM1, oWORD[ a + 0*FloatSize ]
-  addsd XMM2, qWORD[ a + 2*FloatSize ]
-
-  movapd oWORD[ a + 0*FloatSize ], XMM1
-  movlpd qWORD[ a + 2*FloatSize ], XMM2
-
-
-{$ELSE}
-begin
-  a.x := a.x + b.x*c*V;
-  a.y := a.y + b.y*c*V;
-  a.z := a.z + b.z*c*V;
-{$ENDIF}
-end;
-
-class procedure T_SSE.Add(var a_i: T_Vect; const C_j: T_Vect; const b_ij:
-    T_Tens; const K: real);
-{$IFDEF CPUX64}
-asm
-  .NOFRAME
-
-  movapd   XMM2, K
-  movapd   XMM0, oWORD[ C_j + 0*FloatSize ]
-  movapd   XMM1, oWORD[ C_j + 2*FloatSize ]
-
-
-  movlhps XMM2, XMM2
-  mulpd   XMM0, XMM2
-  mulpd   XMM1, XMM2
-
-
-  movapd  XMM2, oWORD[ b_ij + 0*FloatSize ]
-  movapd  XMM3, oWORD[ b_ij + 2*FloatSize ]
-  mulpd   XMM2, XMM0    // xmm2 = b.xx*c.x | b.xy*c.y
-  mulsd   XMM3, XMM1    // xmm3 = b.xz*c.z | trash
-  addsd   XMM2, XMM3    // xmm2 = b.xx*c.x + b.xz*c.z| b.xy*c.y
-
-
-  movapd  XMM3, oWORD[ b_ij + 4*FloatSize ]
-  movapd  XMM4, oWORD[ b_ij + 6*FloatSize ]
-  mulpd   XMM3, XMM0    // xmm3 = b.yx*c.x | b.yy*c.y
-  mulsd   XMM4, XMM1    // xmm4 = b.yz*c.z | trash
-  addsd   XMM3, XMM4    // xmm3 = b.yx*c.x + b.yz*c.z| b.yy*c.y
-  haddpd  XMM2, XMM3
-
-  addpd   XMM2, oWORD[ a_i + 0*FloatSize]
-  movapd oWORD[ a_i + 0*FloatSize ], XMM2
-
-  movapd  XMM2, oWORD[ b_ij +  8*FloatSize ]
-  movapd  XMM3, oWORD[ b_ij + 10*FloatSize ]
-  mulpd   XMM2, XMM0    // xmm2 = b.zx*c.x | b.zy*c.y
-  mulsd   XMM3, XMM1    // xmm3 = b.zz*c.z | trash
-  movhpd  XMM3, qWORD [a_i + 2*FloatSize] //// xmm3 = b.zz*c.z | a_i.z
-
-  haddpd XMM2, XMM3  // XMM2 =  b.zx*c.x + b.zy*c.y | b.zz*c.z + a_i.z
-  haddpd XMM2, XMM2  // XMM2 =  b.zx*c.x + b.zy*c.y + b.zz*c.z + a_i.z  | twice
-  movlpd  qWORD [a_i + 2*FloatSize], XMM2
-
-{$ELSE}
-begin
-  a_i.x := a_i.x+K*(b_ij.x.x*C_j.x+b_ij.x.y*C_j.y+b_ij.x.z*C_j.z) ;
-  a_i.y := a_i.y+K*(b_ij.y.x*C_j.x+b_ij.y.y*C_j.y+b_ij.y.z*C_j.z) ;
-  a_i.z := a_i.z+K*(b_ij.z.x*C_j.x+b_ij.z.y*C_j.y+b_ij.z.z*C_j.z) ;
-{$ENDIF}
 end;
 
 class procedure T_SSE.Add(const a_j: T_VectArr; const C_i: T_VectArr; const
@@ -3442,6 +3474,193 @@ begin
 {$ENDIF CPUX64}
 
 end;
+
+
+class function T_SSE.DotProd(const V0,V1 : T_Vect): real;
+ {$IFDEF CPUX64}
+asm
+    .NOFRAME
+
+    movapd XMM0, OWORD[V0]
+    movapd XMM2, OWORD[V1]
+
+    dppd XMM0, XMM2,  49 // imm8 = bit0 | ~bit1 | bit4 | bit5
+                         // bit0- save res to low half
+                         // bit4- * low parts
+                         // bit5- * high parts
+
+    movapd XMM1, OWORD[V0+2*FloatSize]
+    movapd XMM3, OWORD[V1+2*FloatSize]
+
+    mulsd XMM1, XMM3
+
+    addsd XMM0, XMM1
+ {$ELSE}
+begin
+  result := V0.x * V1.x + V0.y * V1.y+ V0.z * V1.z;
+{$ENDIF CPUX64}
+
+
+end;
+
+
+class procedure T_SSE.DotProd(const V0,V1 : T_Vect; var Res: double);
+ {$IFDEF CPUX64}
+asm
+
+
+    .NOFRAME
+    movapd XMM0, OWORD[V0]
+    movapd XMM2, OWORD[V1]
+
+    dppd XMM0, XMM2,  49 // imm8 = bit0 | ~bit1 | bit4 | bit5
+                         // bit0- save res to low half
+                         // bit4- * low parts
+                         // bit5- * high parts
+
+    movapd XMM1, OWORD[V0+2*FloatSize]
+    movapd XMM3, OWORD[V1+2*FloatSize]
+
+    mulsd XMM1, XMM3
+
+    addsd XMM0, XMM1
+    movsd   QWORD[Res], xmm0
+
+
+ {$ELSE}
+
+begin
+  Res := V0.x * V1.x + V0.y * V1.y+ V0.z * V1.z;
+{$ENDIF CPUX64}
+
+end;
+
+
+
+class procedure T_SSE.DotProd(const V0,V1 : T_VectArr; var Res: real; const i0,
+    i1: integer);
+ {$IFDEF CPUX64}
+asm
+
+    .NOFRAME
+
+    XOR RAX, RAX
+    mov EAX, i0;
+
+    imul RAX, FloatSize;
+
+    add Res, RAX
+    imul RAX, 4
+    add V0, RAX
+    add V1, RAX
+
+    XOR RAX, RAX
+    mov EAX, i1
+    sub EAX, i0
+    inc RAX
+
+    PXOR XMM3, XMM3
+ @next:
+    movapd XMM0, OWORD[V0]
+    movapd XMM1, OWORD[V1]
+
+    mulpd  XMM0, XMM1
+
+    addpd XMM3, XMM0
+
+
+
+    movapd XMM0, OWORD[V0+2*FloatSize]
+    movapd XMM1, OWORD[V1+2*FloatSize]
+
+    mulsd XMM0, XMM1
+
+
+    addsd XMM3, XMM0
+
+    add V0, VectSize
+    add V1, VectSize
+
+
+  dec     RAX             // уменьшаем коунтер , значение падает в аккумулятор!
+  jg      @next           // прыг на новую итерацию, если аккумулятор >0
+
+  movhlps XMM0, XMM3
+  addsd XMM0, XMM3
+
+  movsd qWORD[Res], XMM0
+
+
+{$ELSE}
+begin
+
+{$ENDIF CPUX64}
+
+end;
+
+
+
+
+
+class procedure T_SSE.DotProd(const V0,V1 : T_VectArr;const Res: T_RealArr; const
+    i0,i1: integer);
+ {$IFDEF CPUX64}
+asm
+
+    .NOFRAME
+
+    XOR RAX, RAX
+    mov EAX, i0;
+
+    imul RAX, FloatSize;
+
+    add Res, RAX
+    imul RAX, 4
+    add V0, RAX
+    add V1, RAX
+
+    XOR RAX, RAX
+    mov EAX, i1
+    sub EAX, i0
+    inc RAX
+
+ @next:
+    movapd XMM0, OWORD[V0]
+    movapd XMM2, OWORD[V1]
+
+    dppd XMM0, XMM2,  49 // imm8 = bit0 | ~bit1 | bit4 | bit5
+                         // bit0- save res to low half
+                         // bit4- * low parts
+                         // bit5- * high parts
+
+    movapd XMM1, OWORD[V0+2*FloatSize]
+    movapd XMM3, OWORD[V1+2*FloatSize]
+
+    mulsd XMM1, XMM3
+
+    addsd XMM0, XMM1
+    movsd   QWORD[Res], xmm0
+
+    add V0, VectSize
+    add V1, VectSize
+    add Res, FloatSize
+
+  dec     RAX             // уменьшаем коунтер , значение падает в аккумулятор!
+  jg      @next           // прыг на новую итерацию, если аккумулятор >0
+
+{$ELSE}
+begin
+
+{$ENDIF CPUX64}
+
+end;
+
+
+
+
+
+
+
 
 class procedure T_SSE.Invert(var S: T_Tens);
 {$IFDEF CPUX64}
@@ -3611,6 +3830,7 @@ begin
 {$IFEND}
 
 end;
+
 
 
 class procedure T_SSE.Invert(const S: T_Tens; const i0, i1: integer);
@@ -3813,6 +4033,7 @@ begin
     Invert2(  T_TensorArr(@S)[i] );
 {$IFEND}
 end;
+
 
 
 class procedure T_SSE.Invert_gauss(var S: T_M4);
@@ -4111,245 +4332,6 @@ begin
  {$ENDIF}
 end;
 
-
-class procedure T_SSE.Invert_gauss(var S: T_Tens);
-{$ifdef CPUX64}
-const FloatSize = 8;
-      One: double = 1.0;
-      Zero: double = 0.0;
-asm
-// STRAIGTH MOVEMENT!
-  // STEP  #1
-  .NOFRAME
-  .SAVENV XMM5
-  .SAVENV XMM6
-  .SAVENV XMM7
-  .SAVENV XMM8
-  .SAVENV XMM9
-  .SAVENV XMM10
-  .SAVENV XMM11   // }
-
-
-  movapd XMM0, oWORD ptr [RCX              ]   //   S.x.x | S.x.y
-  movapd XMM1, oWORD ptr [RCX+  2*FloatSize]   //   S.x.z | w
-  movapd XMM2, oWORD ptr [RCX+  4*FloatSize]   //   S.y.x | S.y.y
-  movapd XMM3, oWORD ptr [RCX+  6*FloatSize]   //   S.y.z | w
-  movapd XMM4, oWORD ptr [RCX+  8*FloatSize]   //   S.z.x | S.z.y
-  movapd XMM5, oWORD ptr [RCX+ 10*FloatSize]   //   S.z.z | w
-
-//  PXOR XMM6, XMM6
-
-{  // STEP #1
-
-  D = 1.0/ S.x.x
-  S.x.x :=       D;
-  S.x.y := S.x.y*D;
-  S.x.z := S.x.z*D;}
-
-
-
-  movsd XMM11, One
-      //  movlhps XMM11, XMM11   //  XMM11 = 1 | 1
-      //  movsd XMM10, Zero
-      //  movlhps XMM10, XMM10   //  XMM10 = 0 | 0
-  PXOR XMM10,XMM10
-
-  movsd XMM6, XMM11                 // XMM6.L = 1.0;
-  divsd XMM6, XMM0                  // D := 1.0 / S.x.x;
-  movlhps XMM6, XMM6                // XMM6 = D  | D
-
-  mulpd XMM0, XMM6
-  mulsd XMM1, XMM6                  // XMM0 XMM1= a00*d | a01*d   ||  a02*d | x
-
-  movsd XMM0, XMM6                  // XMM0, XMM1 = D, a01*d, a02*d, x
-
-
-{    // STEP  #2
-  D := S.y.x;
-  s.y.x :=  0    - S.x.x*d;
-  s.y.y := S.y.y - S.x.y*d;
-  s.y.z := S.y.z - S.x.z*d;}
-
-{  PXOR XMM6,XMM6     // XMM6 = 0 | 0
-  subsd   XMM6, XMM2   // XMM6 = (D= -S.y.x) | 0
-  movlhps XMM6, XMM6   // XMM6 =  D          |   D
-
-  movsd XMM2, XMM10     // XMM2 = 0 | S.y.y
-
-  movapd XMM7, XMM0
-  mulpd XMM7, XMM6
-
-  addpd XMM2, XMM7     // XMM2 = S.x.x*D         | S.y.y + S.x.y*D
-
-  movsd XMM7, XMM1
-  mulsd XMM7, XMM6
-  addsd XMM3, XMM7     // XMM3 = S.y.z + S.x.z*d |  w    // }
-
-
-
-  movsd   XMM6, XMM2   // XMM6 = (D= S.y.x) | 0
-  movlhps XMM6, XMM2   // XMM6 =  D          |   D
-
-  movsd XMM2, XMM10     // XMM2 = 0 | S.y.y
-
-  movapd XMM7, XMM0
-  mulpd XMM7, XMM6
-
-  subpd XMM2, XMM7     // XMM2 = -S.x.x*D         | S.y.y - S.x.y*D
-
-  movsd XMM7, XMM1
-  mulsd XMM7, XMM6
-  subsd XMM3, XMM7     // XMM3 = S.y.z - S.x.z*d |  w        //}
-
-{    // STEP  #3
-  D := -S.z.x;
-  S.z.x :=         S.x.x*d;
-  S.z.y := S.z.y + S.x.y*d;
-  S.z.z := S.z.z + S.x.z*d;}
-
-//  PXOR XMM6,XMM6       // XMM6 = 0 | 0
-
-  movsd   XMM6, XMM4   // XMM6 = (D=  S.z.x) | 0
-  movlhps XMM6, XMM4   // XMM6 =  D          |   D
-
-  movsd XMM4, XMM10    // XMM4 = 0 | S.z.y
-
-  movapd XMM7, XMM0
-  mulpd XMM7, XMM6
-
-  subpd XMM4, XMM7     // XMM4 = -S.z.x*D         | S.z.y - S.x.y*D
-
-  movsd XMM7, XMM1
-  mulsd XMM7, XMM6
-  subsd XMM5, XMM7     // XMM5 = S.z.z - S.x.z*d |  w
-
-
-{    // STEP  #4
-  D := 1.0/S.y.y;
-  S.y.x := S.y.x*D;
-  S.y.y :=       D;
-  S.y.z := S.y.z*D;  }
-
-  movsd   XMM6, XMM11
-  movhlps XMM7, XMM2    // XMM7 = S.y.y    |    w
-  divsd   XMM6, XMM7    // XMM6 = 1.0/ S.y.y   = D
-  movlhps XMM6, XMM6
-
-  mulsd   XMM2, XMM6    // XMM2 = S.y.x*D  |   S.y.y
-  movlhps XMM2, XMM6    // XMM2 = S.y.x*D  |   D
-
-  mulsd   XMM3, XMM6    // XMM3 = S.y.z*D  |    w
-
-{    // STEP  #5
-  D := -S.z.y;                  //  S.z = XMM4 | XMM5
-  S.z.x := S.z.x + S.y.x*D;
-  S.z.y :=         S.y.y*D;
-  S.z.z := S.z.z + S.y.z*D;}
-
-
-  movhlps XMM6, XMM4   // XMM7= S.z.y     |   w
-  movlhps XMM6, XMM6   // XMM6= D         |   D
-
-  movlhps XMM4, XMM10  // XMM4= S.z.x     | 0
-
-  movapd   XMM7, XMM2   // XMM7= S.y.x      | S.y.y
-  mulpd   XMM7, XMM6   // XMM7= S.y.x*D    | S.y.y*D
-  subpd   XMM4, XMM7   // XMM4= S.z.x - S.y.x*D | -S.y.y*D
-
-//  movsd   XMM7, XMM3   // XMM7= S.y.z      | t
-//  mulsd   XMM7, XMM6   // XMM7= S.y.z*D    | t
-//  subsd   XMM5, XMM7   // XMM5= S.z.z - S.y.z*D | t
-
-//  movsd   XMM7, XMM3   // XMM7= S.y.z      | t
-  mulsd   XMM6, XMM3   // XMM6= S.y.z*D    | t
-  subsd   XMM5, XMM6   // XMM5= S.z.z - S.y.z*D | t
-
- {   // STEP  #6
-  D := 1.0/S.z.z;
-  S.z.x := S.z.x*D;
-  S.z.y := S.z.y*D;
-  S.z.z :=       D;    // 1/A22}
-
-//  movsd XMM7, XMM11    // XMM7= 1 | w
-  divsd XMM11, XMM5     // XMM11= 1/S.z.z  | 1.0
-  movsd XMM5, XMM11
-  movlhps XMM5, XMM5   // XMM7 = D  | D
-
-  mulpd XMM4, XMM5     // XMM4 = S.z.x*D | S.z.y*D
-
-// BACKWARD MOVEMENT!
-
-{    // STEP  #7
-  D := -S.x.y;
-  S.x.x := S.x.x + S.y.x*D;
-  S.x.y :=         S.y.y*D;
-  S.x.z := S.x.z + S.y.z*D;}
-
-  movapd XMM6, XMM0      // XMM7= S.x.x | S.x.y
-  movhlps XMM6, XMM6     // XMM6 = D | D   =S.x.y
-
-  movlhps XMM0, XMM10    // S.x.y = 0
-  movapd XMM7, XMM2      // XMM7= S.y.x      | S.y.y
-  mulpd XMM7, XMM6       // XMM7= S.y.x*D    | S.y.y*D
-  subpd XMM0, XMM7       // XMM0= S.x.x+S.y.x*D | S.y.y*D
-
-  movsd XMM7, XMM3       // XMM7= S.y.z      | t
-  mulsd XMM7, XMM6       // XMM7= S.y.z*D    | t
-  subsd XMM1, XMM7       // XMM0= S.x.z+S.y.z*D | t
-
-
-{    // STEP  #8
-  D := S.y.z;
-  S.y.x := S.y.x - S.z.x*D;     Xmm2.L
-  S.y.y := S.y.y - S.z.y*D;     Xmm2.H
-  S.y.z :=       - S.z.z*D;     Xmm3.L
-  }
-
-//  movsd XMM6, XMM3       // XMM7= S.y.z= D
-  movlhps XMM3, XMM3     // XMM3 = D | D
-
-//  movlhps XMM0, XMM10  // S.x.y = 0
-  movapd XMM7, XMM4      // XMM7= S.z.x         | S.z.y
-  mulpd XMM7, XMM3       // XMM7= S.z.x*D       | S.z.y*D
-  subpd XMM2, XMM7       // XMM2= S.y.x-S.z.x*D | S.y.y -  S.z.y*D
-
-  movsd XMM7, XMM5       // XMM7= S.z.z          | t
-  mulsd XMM7, XMM3       // XMM7= S.z.z*D
-  movsd XMM3, XMM10
-  subsd XMM3, XMM7
-
-
-{    // STEP  #9
-  D := -S.x.z;
-  S.x.x := S.x.x + S.z.x*D;
-  S.x.y := S.x.y + S.z.y*D;
-  S.x.z :=         S.z.z*D;}
-
-  movsd XMM6, XMM10    // 0
-  subsd XMM6, XMM1     // 0  -S.x.z == D
-  movlhps XMM6, XMM6   // XMM6 = D  |  D
-
-  movapd XMM7, XMM4    // S.z.x    | S.z.y
-  mulpd  XMM7, XMM6    // S.z.x*D  | S.z.y*D
-
-  addpd XMM0, XMM7     // XMM0= S.x.x + S.z.x*D  | S.x.y + S.z.y*D
-  movsd XMM1, XMM5     // XMM1= S.z.z
-  mulsd XMM1, XMM6     // XMM1= S.z.z*D
-
-
-  movapd  oWORD ptr[RCX              ], XMM0   //   S.x.x | S.x.y
-  movapd  oWORD ptr[RCX+  2*FloatSize], XMM1   //   S.x.z |
-  movapd  oWORD ptr[RCX+  4*FloatSize], XMM2   //   S.y.x | S.y.y
-  movapd  oWORD ptr[RCX+  6*FloatSize], XMM3   //   S.y.z |
-  movapd  oWORD ptr[RCX+  8*FloatSize], XMM4   //   S.z.x | S.z.y
-  movapd  oWORD ptr[RCX+ 10*FloatSize], XMM5   //   S.z.z |
-
-{$ELSE}
-begin
-  Invert2(  S );
-{$ENDIF CPUX64}
-
-end;
 
 
 class procedure T_SSE.Invert_gauss(var S: T_M4; const N: integer);
@@ -4675,6 +4657,248 @@ begin
 end;
 
 
+
+class procedure T_SSE.Invert_gauss(var S: T_Tens);
+{$ifdef CPUX64}
+const FloatSize = 8;
+      One: double = 1.0;
+      Zero: double = 0.0;
+asm
+// STRAIGTH MOVEMENT!
+  // STEP  #1
+  .NOFRAME
+  .SAVENV XMM5
+  .SAVENV XMM6
+  .SAVENV XMM7
+  .SAVENV XMM8
+  .SAVENV XMM9
+  .SAVENV XMM10
+  .SAVENV XMM11   // }
+
+
+  movapd XMM0, oWORD ptr [RCX              ]   //   S.x.x | S.x.y
+  movapd XMM1, oWORD ptr [RCX+  2*FloatSize]   //   S.x.z | w
+  movapd XMM2, oWORD ptr [RCX+  4*FloatSize]   //   S.y.x | S.y.y
+  movapd XMM3, oWORD ptr [RCX+  6*FloatSize]   //   S.y.z | w
+  movapd XMM4, oWORD ptr [RCX+  8*FloatSize]   //   S.z.x | S.z.y
+  movapd XMM5, oWORD ptr [RCX+ 10*FloatSize]   //   S.z.z | w
+
+//  PXOR XMM6, XMM6
+
+{  // STEP #1
+
+  D = 1.0/ S.x.x
+  S.x.x :=       D;
+  S.x.y := S.x.y*D;
+  S.x.z := S.x.z*D;}
+
+
+
+  movsd XMM11, One
+      //  movlhps XMM11, XMM11   //  XMM11 = 1 | 1
+      //  movsd XMM10, Zero
+      //  movlhps XMM10, XMM10   //  XMM10 = 0 | 0
+  PXOR XMM10,XMM10
+
+  movsd XMM6, XMM11                 // XMM6.L = 1.0;
+  divsd XMM6, XMM0                  // D := 1.0 / S.x.x;
+  movlhps XMM6, XMM6                // XMM6 = D  | D
+
+  mulpd XMM0, XMM6
+  mulsd XMM1, XMM6                  // XMM0 XMM1= a00*d | a01*d   ||  a02*d | x
+
+  movsd XMM0, XMM6                  // XMM0, XMM1 = D, a01*d, a02*d, x
+
+
+{    // STEP  #2
+  D := S.y.x;
+  s.y.x :=  0    - S.x.x*d;
+  s.y.y := S.y.y - S.x.y*d;
+  s.y.z := S.y.z - S.x.z*d;}
+
+{  PXOR XMM6,XMM6     // XMM6 = 0 | 0
+  subsd   XMM6, XMM2   // XMM6 = (D= -S.y.x) | 0
+  movlhps XMM6, XMM6   // XMM6 =  D          |   D
+
+  movsd XMM2, XMM10     // XMM2 = 0 | S.y.y
+
+  movapd XMM7, XMM0
+  mulpd XMM7, XMM6
+
+  addpd XMM2, XMM7     // XMM2 = S.x.x*D         | S.y.y + S.x.y*D
+
+  movsd XMM7, XMM1
+  mulsd XMM7, XMM6
+  addsd XMM3, XMM7     // XMM3 = S.y.z + S.x.z*d |  w    // }
+
+
+
+  movsd   XMM6, XMM2   // XMM6 = (D= S.y.x) | 0
+  movlhps XMM6, XMM2   // XMM6 =  D          |   D
+
+  movsd XMM2, XMM10     // XMM2 = 0 | S.y.y
+
+  movapd XMM7, XMM0
+  mulpd XMM7, XMM6
+
+  subpd XMM2, XMM7     // XMM2 = -S.x.x*D         | S.y.y - S.x.y*D
+
+  movsd XMM7, XMM1
+  mulsd XMM7, XMM6
+  subsd XMM3, XMM7     // XMM3 = S.y.z - S.x.z*d |  w        //}
+
+{    // STEP  #3
+  D := -S.z.x;
+  S.z.x :=         S.x.x*d;
+  S.z.y := S.z.y + S.x.y*d;
+  S.z.z := S.z.z + S.x.z*d;}
+
+//  PXOR XMM6,XMM6       // XMM6 = 0 | 0
+
+  movsd   XMM6, XMM4   // XMM6 = (D=  S.z.x) | 0
+  movlhps XMM6, XMM4   // XMM6 =  D          |   D
+
+  movsd XMM4, XMM10    // XMM4 = 0 | S.z.y
+
+  movapd XMM7, XMM0
+  mulpd XMM7, XMM6
+
+  subpd XMM4, XMM7     // XMM4 = -S.z.x*D         | S.z.y - S.x.y*D
+
+  movsd XMM7, XMM1
+  mulsd XMM7, XMM6
+  subsd XMM5, XMM7     // XMM5 = S.z.z - S.x.z*d |  w
+
+
+{    // STEP  #4
+  D := 1.0/S.y.y;
+  S.y.x := S.y.x*D;
+  S.y.y :=       D;
+  S.y.z := S.y.z*D;  }
+
+  movsd   XMM6, XMM11
+  movhlps XMM7, XMM2    // XMM7 = S.y.y    |    w
+  divsd   XMM6, XMM7    // XMM6 = 1.0/ S.y.y   = D
+  movlhps XMM6, XMM6
+
+  mulsd   XMM2, XMM6    // XMM2 = S.y.x*D  |   S.y.y
+  movlhps XMM2, XMM6    // XMM2 = S.y.x*D  |   D
+
+  mulsd   XMM3, XMM6    // XMM3 = S.y.z*D  |    w
+
+{    // STEP  #5
+  D := -S.z.y;                  //  S.z = XMM4 | XMM5
+  S.z.x := S.z.x + S.y.x*D;
+  S.z.y :=         S.y.y*D;
+  S.z.z := S.z.z + S.y.z*D;}
+
+
+  movhlps XMM6, XMM4   // XMM7= S.z.y     |   w
+  movlhps XMM6, XMM6   // XMM6= D         |   D
+
+  movlhps XMM4, XMM10  // XMM4= S.z.x     | 0
+
+  movapd   XMM7, XMM2   // XMM7= S.y.x      | S.y.y
+  mulpd   XMM7, XMM6   // XMM7= S.y.x*D    | S.y.y*D
+  subpd   XMM4, XMM7   // XMM4= S.z.x - S.y.x*D | -S.y.y*D
+
+//  movsd   XMM7, XMM3   // XMM7= S.y.z      | t
+//  mulsd   XMM7, XMM6   // XMM7= S.y.z*D    | t
+//  subsd   XMM5, XMM7   // XMM5= S.z.z - S.y.z*D | t
+
+//  movsd   XMM7, XMM3   // XMM7= S.y.z      | t
+  mulsd   XMM6, XMM3   // XMM6= S.y.z*D    | t
+  subsd   XMM5, XMM6   // XMM5= S.z.z - S.y.z*D | t
+
+ {   // STEP  #6
+  D := 1.0/S.z.z;
+  S.z.x := S.z.x*D;
+  S.z.y := S.z.y*D;
+  S.z.z :=       D;    // 1/A22}
+
+//  movsd XMM7, XMM11    // XMM7= 1 | w
+  divsd XMM11, XMM5     // XMM11= 1/S.z.z  | 1.0
+  movsd XMM5, XMM11
+  movlhps XMM5, XMM5   // XMM7 = D  | D
+
+  mulpd XMM4, XMM5     // XMM4 = S.z.x*D | S.z.y*D
+
+// BACKWARD MOVEMENT!
+
+{    // STEP  #7
+  D := -S.x.y;
+  S.x.x := S.x.x + S.y.x*D;
+  S.x.y :=         S.y.y*D;
+  S.x.z := S.x.z + S.y.z*D;}
+
+  movapd XMM6, XMM0      // XMM7= S.x.x | S.x.y
+  movhlps XMM6, XMM6     // XMM6 = D | D   =S.x.y
+
+  movlhps XMM0, XMM10    // S.x.y = 0
+  movapd XMM7, XMM2      // XMM7= S.y.x      | S.y.y
+  mulpd XMM7, XMM6       // XMM7= S.y.x*D    | S.y.y*D
+  subpd XMM0, XMM7       // XMM0= S.x.x+S.y.x*D | S.y.y*D
+
+  movsd XMM7, XMM3       // XMM7= S.y.z      | t
+  mulsd XMM7, XMM6       // XMM7= S.y.z*D    | t
+  subsd XMM1, XMM7       // XMM0= S.x.z+S.y.z*D | t
+
+
+{    // STEP  #8
+  D := S.y.z;
+  S.y.x := S.y.x - S.z.x*D;     Xmm2.L
+  S.y.y := S.y.y - S.z.y*D;     Xmm2.H
+  S.y.z :=       - S.z.z*D;     Xmm3.L
+  }
+
+//  movsd XMM6, XMM3       // XMM7= S.y.z= D
+  movlhps XMM3, XMM3     // XMM3 = D | D
+
+//  movlhps XMM0, XMM10  // S.x.y = 0
+  movapd XMM7, XMM4      // XMM7= S.z.x         | S.z.y
+  mulpd XMM7, XMM3       // XMM7= S.z.x*D       | S.z.y*D
+  subpd XMM2, XMM7       // XMM2= S.y.x-S.z.x*D | S.y.y -  S.z.y*D
+
+  movsd XMM7, XMM5       // XMM7= S.z.z          | t
+  mulsd XMM7, XMM3       // XMM7= S.z.z*D
+  movsd XMM3, XMM10
+  subsd XMM3, XMM7
+
+
+{    // STEP  #9
+  D := -S.x.z;
+  S.x.x := S.x.x + S.z.x*D;
+  S.x.y := S.x.y + S.z.y*D;
+  S.x.z :=         S.z.z*D;}
+
+  movsd XMM6, XMM10    // 0
+  subsd XMM6, XMM1     // 0  -S.x.z == D
+  movlhps XMM6, XMM6   // XMM6 = D  |  D
+
+  movapd XMM7, XMM4    // S.z.x    | S.z.y
+  mulpd  XMM7, XMM6    // S.z.x*D  | S.z.y*D
+
+  addpd XMM0, XMM7     // XMM0= S.x.x + S.z.x*D  | S.x.y + S.z.y*D
+  movsd XMM1, XMM5     // XMM1= S.z.z
+  mulsd XMM1, XMM6     // XMM1= S.z.z*D
+
+
+  movapd  oWORD ptr[RCX              ], XMM0   //   S.x.x | S.x.y
+  movapd  oWORD ptr[RCX+  2*FloatSize], XMM1   //   S.x.z |
+  movapd  oWORD ptr[RCX+  4*FloatSize], XMM2   //   S.y.x | S.y.y
+  movapd  oWORD ptr[RCX+  6*FloatSize], XMM3   //   S.y.z |
+  movapd  oWORD ptr[RCX+  8*FloatSize], XMM4   //   S.z.x | S.z.y
+  movapd  oWORD ptr[RCX+ 10*FloatSize], XMM5   //   S.z.z |
+
+{$ELSE}
+begin
+  Invert2(  S );
+{$ENDIF CPUX64}
+
+end;
+
+
+
 class function T_SSE.Invert_M3_clang(const M3: T_Tens3): T_Tens3;
 const One : Uint64 = $3ff0000000000000 ;         //    # double 1
 asm
@@ -4755,194 +4979,6 @@ asm
         divsd   xmm12, xmm3
         movsd   qword ptr [result + 64], xmm12
 end;
-
-class function T_SSE.DotProd(const V0,V1 : T_Vect): real;
- {$IFDEF CPUX64}
-asm
-    .NOFRAME
-
-    movapd XMM0, OWORD[V0]
-    movapd XMM2, OWORD[V1]
-
-    dppd XMM0, XMM2,  49 // imm8 = bit0 | ~bit1 | bit4 | bit5
-                         // bit0- save res to low half
-                         // bit4- * low parts
-                         // bit5- * high parts
-
-    movapd XMM1, OWORD[V0+2*FloatSize]
-    movapd XMM3, OWORD[V1+2*FloatSize]
-
-    mulsd XMM1, XMM3
-
-    addsd XMM0, XMM1
- {$ELSE}
-begin
-  result := V0.x * V1.x + V0.y * V1.y+ V0.z * V1.z;
-{$ENDIF CPUX64}
-
-
-end;
-
-class procedure T_SSE.DotProd(const V0,V1 : T_Vect; var Res: double);
- {$IFDEF CPUX64}
-asm
-
-
-    .NOFRAME
-    movapd XMM0, OWORD[V0]
-    movapd XMM2, OWORD[V1]
-
-    dppd XMM0, XMM2,  49 // imm8 = bit0 | ~bit1 | bit4 | bit5
-                         // bit0- save res to low half
-                         // bit4- * low parts
-                         // bit5- * high parts
-
-    movapd XMM1, OWORD[V0+2*FloatSize]
-    movapd XMM3, OWORD[V1+2*FloatSize]
-
-    mulsd XMM1, XMM3
-
-    addsd XMM0, XMM1
-    movsd   QWORD[Res], xmm0
-
-
- {$ELSE}
-
-begin
-  Res := V0.x * V1.x + V0.y * V1.y+ V0.z * V1.z;
-{$ENDIF CPUX64}
-
-end;
-
-
-class procedure T_SSE.Solve(const A: T_Tens; const B: T_Vect; var X: T_Vect);
-{$IFDEF CPUX64}
-const One : double = 1.0;
-      Zero : double = 0.0;
-asm
-
-   .NOFRAME
-   .SAVENV XMM4
-   .SAVENV XMM5
-   .SAVENV XMM6
-   .SAVENV XMM7
-
-   // Load matrix
-   movapd  XMM0, oWORD[A]
-   movapd  XMM1, oWORD[A+2 *FloatSize]
-   movapd  XMM2, oWORD[A+4 *FloatSize]
-   movapd  XMM3, oWORD[A+6 *FloatSize]
-   movapd  XMM4, oWORD[A+8 *FloatSize]
-   movapd  XMM5, oWORD[A+10*FloatSize]
-
-   // Load FreePart to extended row of matrix
-   movhpd  XMM1, qWORD[B             ]
-   movhpd  XMM3, qWORD[B+ FloatSize  ]
-   movhpd  XMM5, qWORD[B+ 2*FloatSize]
-
-
-   // divide first string with a00 ( make 1.0 on main diagonal)
-{   movlpd  XMM7, One
-   divsd   XMM7, XMM0    // XMM7 = 1/A00 | 0
-   movlhps XMM7, XMM7    // XMM7 = 1/A00 | 1/A00
-
-   mulpd   XMM0, XMM7
-   mulpd   XMM1, XMM7    // XMM0, XMM1 = 1.0 | A01/A00,  A02/A00 | b0/A00 }
-
-
-   movapd  XMM7, XMM0
-   movlhps XMM7, XMM7
-
-   movlpd  XMM0, One
-
-   divpd   XMM0, XMM7    // XMM0 = 1/A00 | A01/A00
-   movapd  XMM7, XMM0    // XMM7 = 1/A00 | 1/A00
-   movlhps XMM7, XMM0
-
-   mulpd   XMM1, XMM7    // XMM0, XMM1 = 1.0/a00 | a01/a00,  a02/a00 | b0/a00
-
-
-   // get elem of first string, multiply with a10 and subtract from second string
-   movsd   XMM7, XMM2
-   movlhps XMM7, XMM7    // XMM7 = a10 | a10
-
-   movapd  XMM6, XMM0    // use XMM6 as temp accumulator
-   mulpd   XMM6, XMM7
-   subpd   XMM2, XMM6
-
-   movapd  XMM6, XMM1
-   mulpd   XMM6, XMM7
-   subpd   XMM3, XMM6    // XMM2, XMM3 = 0 | A11*,  A12* | b1*
-
-   // get elem of first string, multiply with a20 and subtract from third string
-   movsd   XMM7, XMM4
-   movlhps XMM7, XMM7    // XMM7 = A20 | A20
-
-   movapd  XMM6, XMM0
-   mulpd   XMM6, XMM7
-   subpd   XMM4, XMM6
-
-   movapd  XMM6, XMM1
-   mulpd   XMM6, XMM7
-   subpd   XMM5, XMM6    // XMM4, XMM5 = 0 | A21*,  A22* | b2*
-
-   movhlps XMM2,XMM2     // XMM2 = a11* | a11*
-   divpd XMM3, XMM2      // XMM3 = a12** | b1**
-
-   movhlps XMM4, XMM4    // XMM4 = a21 | a21
-   mulpd   XMM4, XMM3
-   subpd   XMM5, XMM4    // XMM5 = a22*, b2*
-   movhlps XMM7, XMM5    // XMM7 = b2*
-   divsd   XMM7, XMM5    // XMM7 = b2*/ a22*   = x2
-
-   movapd  XMM4, XMM1    // XMM4 = a02 | b0
-   movlhps XMM4, XMM3    // XMM4 = a02 | a12
-
-   movlhps XMM7, XMM7    // XMM7 = x2 | x2
-
-   mulpd   XMM4, XMM7    // XMM4 = a02*x2 | a12*x2
-   movhlps XMM3, XMM1    // XMM3 = b0* | b1*
-
-   subpd   XMM3, XMM4    // XMM3 = b0** | x1
-   mulpd   XMM0, XMM3
-   movhlps XMM0, XMM0
-   subsd   XMM3, XMM0
-
-   movapd  oWORD[X              ],  XMM3
-   movsd   qWORD[X + 2*FloatSize],  XMM7
-
-{$ELSE}
-var D: real;
-    r: T_Vect;
-begin
-  D:=    A.x.x*( A.y.y*A.z.z - A.y.z*A.z.y )
-       + A.x.y*( A.z.x*A.y.z - A.y.x*A.z.z )
-       + A.x.z*( A.y.x*A.z.y - A.y.y*A.z.x ) ;
-
-  if Abs(D)> 1.0e-16 then
-    D := 1.0 / D
-  else begin
-    X :=  B;
-    exit;
-  end;
-
-  r := B;
-
-  X.x :=(    (  A.y.y*A.z.z - A.y.z*A.z.y  ) * r.x
-            -(  A.x.y*A.z.z - A.x.z*A.z.y  ) * r.y
-            +(  A.x.y*A.y.z - A.x.z*A.y.y  ) * r.z  ) * D;
-
-  X.y :=(   -(  A.y.x*A.z.z - A.z.x*A.y.z  ) * r.x
-            +(  A.x.x*A.z.z - A.x.z*A.z.x  ) * r.y
-            -(  A.x.x*A.y.z - A.y.x*A.x.z  ) * r.z  ) * D;
-
-  X.z :=(    (  A.y.x*A.z.y - A.y.y*A.z.x  ) * r.x
-            -(  A.x.x*A.z.y - A.x.y*A.z.x  ) * r.y
-            +(  A.x.x*A.y.y - A.x.y*A.y.x  ) * r.z  ) * D;
-{$ENDIF}
-
-end;
-
 
 class procedure T_SSE.Solve(const A: P_Tens; const B: P_Vect; const X: P_Vect;
     const N: integer);
@@ -5079,6 +5115,137 @@ begin
 end;
 
 
+
+class procedure T_SSE.Solve(const A: T_Tens; const B: T_Vect; var X: T_Vect);
+{$IFDEF CPUX64}
+const One : double = 1.0;
+      Zero : double = 0.0;
+asm
+
+   .NOFRAME
+   .SAVENV XMM4
+   .SAVENV XMM5
+   .SAVENV XMM6
+   .SAVENV XMM7
+
+   // Load matrix
+   movapd  XMM0, oWORD[A]
+   movapd  XMM1, oWORD[A+2 *FloatSize]
+   movapd  XMM2, oWORD[A+4 *FloatSize]
+   movapd  XMM3, oWORD[A+6 *FloatSize]
+   movapd  XMM4, oWORD[A+8 *FloatSize]
+   movapd  XMM5, oWORD[A+10*FloatSize]
+
+   // Load FreePart to extended row of matrix
+   movhpd  XMM1, qWORD[B             ]
+   movhpd  XMM3, qWORD[B+ FloatSize  ]
+   movhpd  XMM5, qWORD[B+ 2*FloatSize]
+
+
+   // divide first string with a00 ( make 1.0 on main diagonal)
+{   movlpd  XMM7, One
+   divsd   XMM7, XMM0    // XMM7 = 1/A00 | 0
+   movlhps XMM7, XMM7    // XMM7 = 1/A00 | 1/A00
+
+   mulpd   XMM0, XMM7
+   mulpd   XMM1, XMM7    // XMM0, XMM1 = 1.0 | A01/A00,  A02/A00 | b0/A00 }
+
+
+   movapd  XMM7, XMM0
+   movlhps XMM7, XMM7
+
+   movlpd  XMM0, One
+
+   divpd   XMM0, XMM7    // XMM0 = 1/A00 | A01/A00
+   movapd  XMM7, XMM0    // XMM7 = 1/A00 | 1/A00
+   movlhps XMM7, XMM0
+
+   mulpd   XMM1, XMM7    // XMM0, XMM1 = 1.0/a00 | a01/a00,  a02/a00 | b0/a00
+
+
+   // get elem of first string, multiply with a10 and subtract from second string
+   movsd   XMM7, XMM2
+   movlhps XMM7, XMM7    // XMM7 = a10 | a10
+
+   movapd  XMM6, XMM0    // use XMM6 as temp accumulator
+   mulpd   XMM6, XMM7
+   subpd   XMM2, XMM6
+
+   movapd  XMM6, XMM1
+   mulpd   XMM6, XMM7
+   subpd   XMM3, XMM6    // XMM2, XMM3 = 0 | A11*,  A12* | b1*
+
+   // get elem of first string, multiply with a20 and subtract from third string
+   movsd   XMM7, XMM4
+   movlhps XMM7, XMM7    // XMM7 = A20 | A20
+
+   movapd  XMM6, XMM0
+   mulpd   XMM6, XMM7
+   subpd   XMM4, XMM6
+
+   movapd  XMM6, XMM1
+   mulpd   XMM6, XMM7
+   subpd   XMM5, XMM6    // XMM4, XMM5 = 0 | A21*,  A22* | b2*
+
+   movhlps XMM2,XMM2     // XMM2 = a11* | a11*
+   divpd XMM3, XMM2      // XMM3 = a12** | b1**
+
+   movhlps XMM4, XMM4    // XMM4 = a21 | a21
+   mulpd   XMM4, XMM3
+   subpd   XMM5, XMM4    // XMM5 = a22*, b2*
+   movhlps XMM7, XMM5    // XMM7 = b2*
+   divsd   XMM7, XMM5    // XMM7 = b2*/ a22*   = x2
+
+   movapd  XMM4, XMM1    // XMM4 = a02 | b0
+   movlhps XMM4, XMM3    // XMM4 = a02 | a12
+
+   movlhps XMM7, XMM7    // XMM7 = x2 | x2
+
+   mulpd   XMM4, XMM7    // XMM4 = a02*x2 | a12*x2
+   movhlps XMM3, XMM1    // XMM3 = b0* | b1*
+
+   subpd   XMM3, XMM4    // XMM3 = b0** | x1
+   mulpd   XMM0, XMM3
+   movhlps XMM0, XMM0
+   subsd   XMM3, XMM0
+
+   movapd  oWORD[X              ],  XMM3
+   movsd   qWORD[X + 2*FloatSize],  XMM7
+
+{$ELSE}
+var D: real;
+    r: T_Vect;
+begin
+  D:=    A.x.x*( A.y.y*A.z.z - A.y.z*A.z.y )
+       + A.x.y*( A.z.x*A.y.z - A.y.x*A.z.z )
+       + A.x.z*( A.y.x*A.z.y - A.y.y*A.z.x ) ;
+
+  if Abs(D)> 1.0e-16 then
+    D := 1.0 / D
+  else begin
+    X :=  B;
+    exit;
+  end;
+
+  r := B;
+
+  X.x :=(    (  A.y.y*A.z.z - A.y.z*A.z.y  ) * r.x
+            -(  A.x.y*A.z.z - A.x.z*A.z.y  ) * r.y
+            +(  A.x.y*A.y.z - A.x.z*A.y.y  ) * r.z  ) * D;
+
+  X.y :=(   -(  A.y.x*A.z.z - A.z.x*A.y.z  ) * r.x
+            +(  A.x.x*A.z.z - A.x.z*A.z.x  ) * r.y
+            -(  A.x.x*A.y.z - A.y.x*A.x.z  ) * r.z  ) * D;
+
+  X.z :=(    (  A.y.x*A.z.y - A.y.y*A.z.x  ) * r.x
+            -(  A.x.x*A.z.y - A.x.y*A.z.x  ) * r.y
+            +(  A.x.x*A.y.y - A.x.y*A.y.x  ) * r.z  ) * D;
+{$ENDIF}
+
+end;
+
+
+
 class procedure T_SSE.Solve_old(const A: T_Tens; const B: T_Vect; var X:
     T_Vect);
 {$IFDEF CPUX64}
@@ -5201,128 +5368,6 @@ begin
 {$ENDIF}
 
 end;
-
-
-class procedure T_SSE.DotProd(const V0,V1 : T_VectArr;const Res: T_RealArr; const
-    i0,i1: integer);
- {$IFDEF CPUX64}
-asm
-
-    .NOFRAME
-
-    XOR RAX, RAX
-    mov EAX, i0;
-
-    imul RAX, FloatSize;
-
-    add Res, RAX
-    imul RAX, 4
-    add V0, RAX
-    add V1, RAX
-
-    XOR RAX, RAX
-    mov EAX, i1
-    sub EAX, i0
-    inc RAX
-
- @next:
-    movapd XMM0, OWORD[V0]
-    movapd XMM2, OWORD[V1]
-
-    dppd XMM0, XMM2,  49 // imm8 = bit0 | ~bit1 | bit4 | bit5
-                         // bit0- save res to low half
-                         // bit4- * low parts
-                         // bit5- * high parts
-
-    movapd XMM1, OWORD[V0+2*FloatSize]
-    movapd XMM3, OWORD[V1+2*FloatSize]
-
-    mulsd XMM1, XMM3
-
-    addsd XMM0, XMM1
-    movsd   QWORD[Res], xmm0
-
-    add V0, VectSize
-    add V1, VectSize
-    add Res, FloatSize
-
-  dec     RAX             // уменьшаем коунтер , значение падает в аккумулятор!
-  jg      @next           // прыг на новую итерацию, если аккумулятор >0
-
-{$ELSE}
-begin
-
-{$ENDIF CPUX64}
-
-end;
-
-
-
-
-
-
-
-class procedure T_SSE.DotProd(const V0,V1 : T_VectArr; var Res: real; const i0,
-    i1: integer);
- {$IFDEF CPUX64}
-asm
-
-    .NOFRAME
-
-    XOR RAX, RAX
-    mov EAX, i0;
-
-    imul RAX, FloatSize;
-
-    add Res, RAX
-    imul RAX, 4
-    add V0, RAX
-    add V1, RAX
-
-    XOR RAX, RAX
-    mov EAX, i1
-    sub EAX, i0
-    inc RAX
-
-    PXOR XMM3, XMM3
- @next:
-    movapd XMM0, OWORD[V0]
-    movapd XMM1, OWORD[V1]
-
-    mulpd  XMM0, XMM1
-
-    addpd XMM3, XMM0
-
-
-
-    movapd XMM0, OWORD[V0+2*FloatSize]
-    movapd XMM1, OWORD[V1+2*FloatSize]
-
-    mulsd XMM0, XMM1
-
-
-    addsd XMM3, XMM0
-
-    add V0, VectSize
-    add V1, VectSize
-
-
-  dec     RAX             // уменьшаем коунтер , значение падает в аккумулятор!
-  jg      @next           // прыг на новую итерацию, если аккумулятор >0
-
-  movhlps XMM0, XMM3
-  addsd XMM0, XMM3
-
-  movsd qWORD[Res], XMM0
-
-
-{$ELSE}
-begin
-
-{$ENDIF CPUX64}
-
-end;
-
 
 
 
