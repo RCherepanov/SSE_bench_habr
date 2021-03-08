@@ -30,6 +30,13 @@ SizeOfReadDataPerIteration = SizeOf(V3)  + SizeOf(M3x3)
 логарифма- симулирует нагрузку для того, чтобы вывести CPU на повышенную частоту.
 без этого результаты сильно скачут.
 
+
+Для проверки скрости работы других компиляторов можно любым методом
+реализовать обращение массива матриц 4х4, и вставить его в
+
+procedure TForm1.TEST_MATRIX_INVERSION_CLANG_4X4(M4X4: T_M4Arr; N: Integer);
+
+
 Черепанов Р.О.     08 March 2021
 RCherepanov82@gmail.com
 Tiriet@habr.com
@@ -94,10 +101,12 @@ type
     procedure preheat_cpu;
     procedure Start;
     procedure Stop;
+    procedure TEST_MATRIX_INVERSION_CLANG_4X4(M4X4: T_M4Arr; N: Integer);
   published
     procedure Test_DotProd_arrays;
     procedure Test_DotProd_summ;
     procedure Test_Inversion_3x3;
+    procedure Test_Inversion_4x4;
     procedure Test_Mij_Vj;
     procedure Test_Vj_Mji;
   end;
@@ -137,96 +146,8 @@ begin
 end;
 
 procedure TForm1.btn_TestFastInvert_4x4Click(Sender: TObject);
-var t1, t2: T_M4;
-    t_0, t2orig: T_M4;
-    err_orig, err_fast: real;
-    i: integer;
-
-
-
-
 begin
-
-
-  Memo1.Lines.Add(Format('1s = %d calcTime',[CalcTime]));
-
-//  randseed := 0;
-  t_0 := Matrix4(
-     random +1.0, random -0.5, random -0.5, random -0.5,
-     random -0.5, random +1.0, random -0.5, random -0.5,
-     random -0.5, random -0.5, random +1.0, random -0.5,
-     random -0.5, random -0.5, random -0.5, random +1.0
-  );
-
-  t1 := t_0;
-  t2 := t_0;
-
-  Invert(t1);
-
-  _WriteMatrix( 'T^-1 (orig) = ', t1);
-  Memo1.Lines.Add( '' );
-  t1 := mult(t1, t_0);
-
-
-  if Norma(t1, M4_Unite) > 1.0e-14 then
-  begin
-      _Write( 'residual',[] );
-      _WriteMatrix( 'T*T^-1 (orig) = ', t1);
-  end
-  else
-    _Write('Residual: %4.3g', [Norma(t1, M4_unite)]);
-  Memo1.Lines.Add( '' );
-
-  t1 := t_0;
-
-  T_SSE.Invert_gauss(t1);
-
-  _WriteMatrix( 'T^-1 (sse.old) = ', t1);
-  Memo1.Lines.Add( '' );
-  t1 := mult(t1, t_0);
-
-  if Norma(t1, M4_Unite) > 1.0e-14 then
-  begin
-    _Write( 'residual',[] );
-    _WriteMatrix( 'T*T^-1 (orig) = ', t1);
-  end
-  else
-    _Write('Residual: %4.3g', [Norma(t1, M4_unite)]);
-  Memo1.Lines.Add( '' );
-
-/////////////////////
-
-  Memo1.Lines.Add('');
-
-/////////////////////////
-///
-  for i := 0 to N-1 do    M4x4[i] := t_0;
-
-  Start;
-  for i := 0 to N-1 do    Invert(M4x4[i]);
-  Stop;
-
-  WriteResult(t_0,  M4x4[2], 'M4: Invert.original', SizeOf(t_0));
-
-/////////////////////////
-  for i := 0 to N-1 do    M4x4[i] := t_0;
-
-  Start;
-  for i := 0 to N-1 do    T_SSE.Invert_gauss(M4x4[i]);
-  Stop;
-
-  WriteResult(t_0,  M4x4[2], 'M4: Invert_SSE_gauss', SizeOf(t_0));
-
-/////////////////////////
-  for i := 0 to N-1 do    M4x4[i] := t_0;
-
-  Start;
-    T_SSE.Invert_gauss(M4x4[0], N);
-  Stop;
-
-  WriteResult(t_0,  M4x4[2], 'M4: Invert_SSE_gauss(T_M4, N)', SizeOf(t_0));
-
-  SetLength(M4x4, 0);
+  Test_Inversion_4x4;
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
@@ -687,6 +608,120 @@ begin
 
 
 
+end;
+
+procedure TForm1.Test_Inversion_4x4;
+var t1, t2: T_M4;
+    t_0, t2orig: T_M4;
+    err_orig, err_fast: real;
+    i: integer;
+
+
+
+
+begin
+
+
+  Memo1.Lines.Add(Format('1s = %d calcTime',[CalcTime]));
+
+//  randseed := 0;
+  t_0 := Matrix4(
+     random +1.0, random -0.5, random -0.5, random -0.5,
+     random -0.5, random +1.0, random -0.5, random -0.5,
+     random -0.5, random -0.5, random +1.0, random -0.5,
+     random -0.5, random -0.5, random -0.5, random +1.0
+  );
+
+  t1 := t_0;
+  t2 := t_0;
+
+  Invert(t1);
+
+  _WriteMatrix( 'T^-1 (orig) = ', t1);
+  Memo1.Lines.Add( '' );
+  t1 := mult(t1, t_0);
+
+
+  if Norma(t1, M4_Unite) > 1.0e-14 then
+  begin
+      _Write( 'residual',[] );
+      _WriteMatrix( 'T*T^-1 (orig) = ', t1);
+  end
+  else
+    _Write('Residual: %4.3g', [Norma(t1, M4_unite)]);
+  Memo1.Lines.Add( '' );
+
+  t1 := t_0;
+
+  T_SSE.Invert_gauss(t1);
+
+  _WriteMatrix( 'T^-1 (sse.old) = ', t1);
+  Memo1.Lines.Add( '' );
+  t1 := mult(t1, t_0);
+
+  if Norma(t1, M4_Unite) > 1.0e-14 then
+  begin
+    _Write( 'residual',[] );
+    _WriteMatrix( 'T*T^-1 (orig) = ', t1);
+  end
+  else
+    _Write('Residual: %4.3g', [Norma(t1, M4_unite)]);
+  Memo1.Lines.Add( '' );
+
+/////////////////////
+
+  Memo1.Lines.Add('');
+
+/////////////////////////
+///
+  for i := 0 to N-1 do    M4x4[i] := t_0;
+
+  Start;
+  for i := 0 to N-1 do    Invert(M4x4[i]);
+  Stop;
+
+  WriteResult(t_0,  M4x4[2], 'M4: Invert.original', SizeOf(t_0));
+
+/////////////////////////
+  for i := 0 to N-1 do    M4x4[i] := t_0;
+
+  Start;
+  for i := 0 to N-1 do    T_SSE.Invert_gauss(M4x4[i]);
+  Stop;
+
+  WriteResult(t_0,  M4x4[2], 'M4: Invert_SSE_gauss', SizeOf(t_0));
+
+/////////////////////////
+  for i := 0 to N-1 do    M4x4[i] := t_0;
+
+  Start;
+    T_SSE.Invert_gauss(M4x4[0], N);
+  Stop;
+
+  WriteResult(t_0,  M4x4[2], 'M4: Invert_SSE_gauss(T_M4, N)', SizeOf(t_0));
+
+
+/////////////////////////
+  for i := 0 to N-1 do    M4x4[i] := t_0;
+
+  Start;
+    TEST_MATRIX_INVERSION_CLANG_4X4(M4X4, N);
+  Stop;
+
+  WriteResult(t_0,  M4x4[2], 'M4: Invert_SSE_EXTERNAL(T_M4, N)', SizeOf(t_0));
+
+
+
+end;
+
+procedure TForm1.TEST_MATRIX_INVERSION_CLANG_4X4(M4X4: T_M4Arr; N: Integer);
+begin
+  SLEEP(3000);
+  { TODO :
+    PLACE ANY NEW CODE HERE
+    реализовать инверсию массива матриц тут любым способом
+
+  }
 end;
 
 procedure TForm1.Test_Mij_Vj;
